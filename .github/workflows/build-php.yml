@@ -34,12 +34,11 @@ on:
         options:
           - 'amd64'
           - 'arm64'
-  push:
-    tags:
-      - 'php-*'
-
-env:
-  PACKAGE_NAME: rustypanel-php
+      publish:
+        description: 'Publish to APT repo'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -57,10 +56,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Set distro variables
-        id: distro
+      - name: Set variables
+        id: vars
         run: |
+          PHP_VERSION="${{ github.event.inputs.php_version }}"
           DISTRO="${{ github.event.inputs.distro }}"
+          ARCH="${{ github.event.inputs.arch }}"
 
           if [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
@@ -75,32 +76,27 @@ jobs:
             case "${DISTRO#debian-}" in
               "13") echo "codename=trixie" >> $GITHUB_OUTPUT ;;
               "12") echo "codename=bookworm" >> $GITHUB_OUTPUT ;;
-              "11") echo "codename=bullseye" >> $GITHUB_OUTPUT ;;
             esac
           fi
-
-          echo "Distro: $DISTRO"
-          echo "Base: $(echo $DISTRO | cut -d'-' -f1)"
-          echo "Version: $(echo $DISTRO | cut -d'-' -f2)"
 
       - name: Create output directory
         run: mkdir -p output
 
       - name: Build PHP package
         run: |
-          echo "Building PHP ${{ github.event.inputs.php_version }} for ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }}"
+          echo "Building PHP ${{ github.event.inputs.php_version }} for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }}"
 
           docker run --rm \
             --platform linux/${{ github.event.inputs.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
             -e VERSION=${{ github.event.inputs.php_version }} \
-            -e DISTRO=${{ steps.distro.outputs.base }} \
-            -e DISTRO_VERSION=${{ steps.distro.outputs.version }} \
-            -e DISTRO_CODENAME=${{ steps.distro.outputs.codename }} \
+            -e DISTRO=${{ steps.vars.outputs.base }} \
+            -e DISTRO_VERSION=${{ steps.vars.outputs.version }} \
+            -e DISTRO_CODENAME=${{ steps.vars.outputs.codename }} \
             -e ARCH=${{ github.event.inputs.arch }} \
             -e OUTPUT_DIR=/output \
-            ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} \
+            ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }} \
             bash /build/packages/php/build.sh
 
       - name: Upload artifact
@@ -113,7 +109,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: ${{ github.event.inputs.publish == 'true' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -123,17 +119,25 @@ jobs:
         with:
           path: packages
 
+      - name: List packages
+        run: find packages -name "*.deb" -ls
+
       - name: Setup GPG
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
 
       - name: Update APT repository
         run: |
+          chmod +x ./scripts/update-repo.sh
           ./scripts/update-repo.sh packages/
+
+      - name: Copy GPG key and CNAME
+        run: |
+          cp repo/gpg.key repo/apt/ || true
+          cp repo/CNAME repo/apt/ || true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo
-          destination_dir: apt
