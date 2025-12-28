@@ -2,9 +2,10 @@
 output/
 *.deb
 
-# Repository files (generated)
-repo/
+# Repository files (generated, but keep gpg.key)
+repo/*
 !repo/.gitkeep
+!repo/gpg.key
 
 # Temporary build files
 /tmp/
