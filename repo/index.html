@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RustyPanel Package Repository</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #1a1d21; color: #f5f5f4; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #e45a27; }
+        code { background: #252a31; padding: 2px 8px; border-radius: 4px; }
+        pre { background: #252a31; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        a { color: #e45a27; }
+    </style>
+</head>
+<body>
+    <h1>RustyPanel Package Repository</h1>
+    <p>Pre-compiled packages for RustyPanel.</p>
+
+    <h2>Setup</h2>
+    <pre><code># Import GPG key
+curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel-archive-keyring.gpg
+
+# Add repository (Ubuntu 24.04)
+echo "deb [signed-by=/usr/share/keyrings/rustypanel-archive-keyring.gpg] https://mirror-rustypanel.monity.io noble main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+
+# Update and install
+sudo apt update
+sudo apt install rustypanel-php85</code></pre>
+
+    <h2>Available Packages</h2>
+    <ul>
+        <li><a href="pool/">Browse packages</a></li>
+        <li><a href="dists/">Browse distributions</a></li>
+        <li><a href="gpg.key">GPG Public Key</a></li>
+    </ul>
+
+    <h2>Links</h2>
+    <ul>
+        <li><a href="https://github.com/rustynail1984/rustypanel">RustyPanel on GitHub</a></li>
+        <li><a href="https://github.com/rustynail1984/rustypanel-packages">Package Repository on GitHub</a></li>
+    </ul>
+</body>
+</html>

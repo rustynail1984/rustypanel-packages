@@ -7,6 +7,7 @@ repo/*
 !repo/.gitkeep
 !repo/gpg.key
 !repo/CNAME
+!repo/index.html
 
 # Temporary build files
 /tmp/

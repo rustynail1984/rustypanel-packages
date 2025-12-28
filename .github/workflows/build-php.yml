@@ -122,22 +122,35 @@ jobs:
       - name: List packages
         run: find packages -name "*.deb" -ls
 
+      - name: Install APT tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev
+
       - name: Setup GPG
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+          echo "GPG_KEY_ID=$(gpg --list-keys --keyid-format SHORT | grep -A1 'pub' | tail -1 | awk '{print $1}')" >> $GITHUB_ENV
 
       - name: Update APT repository
         run: |
           chmod +x ./scripts/update-repo.sh
           ./scripts/update-repo.sh packages/
 
-      - name: Copy GPG key and CNAME
+      - name: Prepare publish directory
         run: |
-          cp repo/gpg.key repo/apt/ || true
-          cp repo/CNAME repo/apt/ || true
+          # Copy static files
+          cp repo/gpg.key repo/gpg.key || true
+          cp repo/CNAME repo/CNAME || true
+          cp repo/index.html repo/index.html || true
+
+          # Debug: show what's in repo
+          echo "Contents of repo/:"
+          find repo -type f | head -50
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo
+          cname: mirror-rustypanel.monity.io
