@@ -1,41 +1,267 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RustyPanel Package Repository</title>
     <style>
-        body { font-family: system-ui, sans-serif; background: #1a1d21; color: #f5f5f4; max-width: 800px; margin: 50px auto; padding: 20px; }
-        h1 { color: #e45a27; }
-        code { background: #252a31; padding: 2px 8px; border-radius: 4px; }
-        pre { background: #252a31; padding: 15px; border-radius: 8px; overflow-x: auto; }
-        a { color: #e45a27; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #1a1d21;
+            color: #f5f5f4;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: #e45a27; margin-bottom: 0.5rem; }
+        h2 { color: #e45a27; margin-top: 2rem; font-size: 1.3rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+        h3 { color: #ccc; font-size: 1rem; margin-top: 1.5rem; }
+        .subtitle { color: #888; margin-top: 0; }
+        code { background: #252a31; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        pre {
+            background: #252a31;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        pre code { padding: 0; background: none; }
+        a { color: #e45a27; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .cmd {
+            background: #252a31;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+        .cmd .comment { color: #6a9955; }
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 1rem;
+        }
+        .package-card {
+            background: #252a31;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .package-card h4 {
+            margin: 0 0 8px 0;
+            color: #e45a27;
+            font-size: 1rem;
+        }
+        .package-card p {
+            margin: 0;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+        .package-card .versions {
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .distro-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .distro-tab {
+            background: #252a31;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+        .distro-tab:hover { border-color: #e45a27; }
+        .distro-tab.active { background: #e45a27; color: #fff; }
+        .distro-content { display: none; }
+        .distro-content.active { display: block; }
+        .browse-links {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .browse-link {
+            background: #252a31;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .browse-link:hover { background: #2a3038; text-decoration: none; }
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        footer a { color: #888; }
     </style>
 </head>
 <body>
     <h1>RustyPanel Package Repository</h1>
-    <p>Pre-compiled packages for RustyPanel.</p>
+    <p class="subtitle">Pre-compiled Debian/Ubuntu packages for RustyPanel</p>
 
-    <h2>Setup</h2>
-    <pre><code># Import GPG key
-curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel-archive-keyring.gpg
+    <h2>Quick Start</h2>
 
-# Add repository (Ubuntu 24.04)
-echo "deb [signed-by=/usr/share/keyrings/rustypanel-archive-keyring.gpg] https://mirror-rustypanel.monity.io noble main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+    <h3>1. Import GPG Key</h3>
+    <div class="cmd">
+        <span class="comment"># Download and install the repository signing key</span><br>
+        curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel.gpg
+    </div>
 
-# Update and install
-sudo apt update
-sudo apt install rustypanel-php85</code></pre>
+    <h3>2. Add Repository</h3>
+    <p>Choose your distribution:</p>
+
+    <div class="distro-tabs">
+        <div class="distro-tab active" onclick="showDistro('noble')">Ubuntu 24.04</div>
+        <div class="distro-tab" onclick="showDistro('jammy')">Ubuntu 22.04</div>
+        <div class="distro-tab" onclick="showDistro('trixie')">Debian 13</div>
+        <div class="distro-tab" onclick="showDistro('bookworm')">Debian 12</div>
+    </div>
+
+    <div id="distro-noble" class="distro-content active">
+        <div class="cmd">
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>noble</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+        </div>
+    </div>
+    <div id="distro-jammy" class="distro-content">
+        <div class="cmd">
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>jammy</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+        </div>
+    </div>
+    <div id="distro-trixie" class="distro-content">
+        <div class="cmd">
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>trixie</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+        </div>
+    </div>
+    <div id="distro-bookworm" class="distro-content">
+        <div class="cmd">
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>bookworm</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+        </div>
+    </div>
+
+    <h3>3. Install Packages</h3>
+    <div class="cmd">
+        <span class="comment"># Update package list</span><br>
+        sudo apt update<br><br>
+        <span class="comment"># Example: Install PHP 8.4</span><br>
+        sudo apt install rustypanel-php84
+    </div>
 
     <h2>Available Packages</h2>
-    <ul>
-        <li><a href="pool/">Browse packages</a></li>
-        <li><a href="dists/">Browse distributions</a></li>
-        <li><a href="gpg.key">GPG Public Key</a></li>
-    </ul>
 
-    <h2>Links</h2>
-    <ul>
-        <li><a href="https://github.com/rustynail1984/rustypanel">RustyPanel on GitHub</a></li>
-        <li><a href="https://github.com/rustynail1984/rustypanel-packages">Package Repository on GitHub</a></li>
-    </ul>
+    <div class="packages-grid">
+        <div class="package-card">
+            <h4>PHP</h4>
+            <p>PHP runtime with common extensions, PHP-FPM included</p>
+            <div class="versions">7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5</div>
+        </div>
+        <div class="package-card">
+            <h4>MariaDB</h4>
+            <p>MySQL-compatible database server</p>
+            <div class="versions">10.11, 11.4</div>
+        </div>
+        <div class="package-card">
+            <h4>MySQL</h4>
+            <p>Oracle MySQL database server</p>
+            <div class="versions">5.7, 8.0, 8.4</div>
+        </div>
+        <div class="package-card">
+            <h4>PostgreSQL</h4>
+            <p>Advanced open-source database</p>
+            <div class="versions">15, 16, 17</div>
+        </div>
+        <div class="package-card">
+            <h4>Redis</h4>
+            <p>In-memory data store</p>
+            <div class="versions">7.2, 7.4, 8.0</div>
+        </div>
+        <div class="package-card">
+            <h4>NGINX</h4>
+            <p>High-performance web server</p>
+            <div class="versions">mainline, stable</div>
+        </div>
+        <div class="package-card">
+            <h4>Apache</h4>
+            <p>Popular web server</p>
+            <div class="versions">2.4</div>
+        </div>
+        <div class="package-card">
+            <h4>Caddy</h4>
+            <p>Modern web server with automatic HTTPS</p>
+            <div class="versions">latest</div>
+        </div>
+        <div class="package-card">
+            <h4>Varnish</h4>
+            <p>HTTP accelerator / caching proxy</p>
+            <div class="versions">7.5, 7.6</div>
+        </div>
+        <div class="package-card">
+            <h4>HAProxy</h4>
+            <p>Load balancer and proxy server</p>
+            <div class="versions">2.9, 3.0</div>
+        </div>
+    </div>
+
+    <h2>Browse Repository</h2>
+    <div class="browse-links">
+        <a href="pool/" class="browse-link">
+            <span>📦</span> Browse Packages
+        </a>
+        <a href="dists/" class="browse-link">
+            <span>📁</span> Browse Distributions
+        </a>
+        <a href="gpg.key" class="browse-link">
+            <span>🔑</span> GPG Public Key
+        </a>
+    </div>
+
+    <h2>Package Naming</h2>
+    <p>Packages follow the naming convention: <code>rustypanel-{app}{version}</code></p>
+    <div class="cmd">
+        <span class="comment"># Examples:</span><br>
+        sudo apt install rustypanel-php84      <span class="comment"># PHP 8.4</span><br>
+        sudo apt install rustypanel-mariadb114 <span class="comment"># MariaDB 11.4</span><br>
+        sudo apt install rustypanel-redis80    <span class="comment"># Redis 8.0</span><br>
+        sudo apt install rustypanel-nginx      <span class="comment"># NGINX</span>
+    </div>
+
+    <h2>Installation Path</h2>
+    <p>All packages are installed to <code>/rp/apps/</code> to avoid conflicts with system packages:</p>
+    <pre><code>/rp/apps/
+├── php/
+│   ├── 8.4/
+│   └── 8.3/
+├── mariadb/
+│   └── 11.4/
+└── nginx/
+    └── current/</code></pre>
+
+    <footer>
+        <a href="https://github.com/rustynail1984/rustypanel">RustyPanel</a> ·
+        <a href="https://github.com/rustynail1984/rustypanel-packages">Package Source</a>
+    </footer>
+
+    <script>
+        function showDistro(codename) {
+            document.querySelectorAll('.distro-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.distro-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[onclick="showDistro('${codename}')"]`).classList.add('active');
+            document.getElementById('distro-' + codename).classList.add('active');
+        }
+    </script>
 </body>
 </html>

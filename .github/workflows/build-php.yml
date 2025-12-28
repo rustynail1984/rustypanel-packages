@@ -125,7 +125,7 @@ jobs:
       - name: Install APT tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev
+          sudo apt-get install -y dpkg-dev bc
 
       - name: Setup GPG
         run: |
