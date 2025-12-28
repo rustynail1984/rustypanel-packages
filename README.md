@@ -61,10 +61,10 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 
 ```bash
 # Import GPG key
-curl -fsSL https://mirror.rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel-archive-keyring.gpg
+curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel-archive-keyring.gpg
 
 # Add repository
-echo "deb [signed-by=/usr/share/keyrings/rustypanel-archive-keyring.gpg] https://mirror.rustypanel.monity.io/apt stable main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+echo "deb [signed-by=/usr/share/keyrings/rustypanel-archive-keyring.gpg] https://mirror-rustypanel.monity.io/apt stable main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
 
 # Update package list
 sudo apt update

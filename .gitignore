@@ -6,6 +6,7 @@ output/
 repo/*
 !repo/.gitkeep
 !repo/gpg.key
+!repo/CNAME
 
 # Temporary build files
 /tmp/
