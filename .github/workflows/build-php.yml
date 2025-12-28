@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       php_version:
-        description: 'PHP Version'
+        description: 'PHP Version (ignored if build_all is true)'
         required: true
         default: '8.5'
         type: choice
@@ -16,6 +16,11 @@ on:
           - '8.3'
           - '8.4'
           - '8.5'
+      build_all:
+        description: 'Build ALL PHP versions'
+        required: false
+        default: false
+        type: boolean
       distro:
         description: 'Distribution'
         required: true
@@ -41,8 +46,26 @@ on:
         type: boolean
 
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Set build matrix
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event.inputs.build_all }}" == "true" ]]; then
+            echo 'matrix={"php_version":["7.4","8.0","8.1","8.2","8.3","8.4","8.5"]}' >> $GITHUB_OUTPUT
+          else
+            echo 'matrix={"php_version":["${{ github.event.inputs.php_version }}"]}' >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -59,9 +82,7 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          PHP_VERSION="${{ github.event.inputs.php_version }}"
           DISTRO="${{ github.event.inputs.distro }}"
-          ARCH="${{ github.event.inputs.arch }}"
 
           if [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
@@ -82,15 +103,15 @@ jobs:
       - name: Create output directory
         run: mkdir -p output
 
-      - name: Build PHP package
+      - name: Build PHP ${{ matrix.php_version }}
         run: |
-          echo "Building PHP ${{ github.event.inputs.php_version }} for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }}"
+          echo "Building PHP ${{ matrix.php_version }} for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }}"
 
           docker run --rm \
             --platform linux/${{ github.event.inputs.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
-            -e VERSION=${{ github.event.inputs.php_version }} \
+            -e VERSION=${{ matrix.php_version }} \
             -e DISTRO=${{ steps.vars.outputs.base }} \
             -e DISTRO_VERSION=${{ steps.vars.outputs.version }} \
             -e DISTRO_CODENAME=${{ steps.vars.outputs.codename }} \
@@ -102,7 +123,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php${{ github.event.inputs.php_version }}-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
+          name: php${{ matrix.php_version }}-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
           path: output/*.deb
           retention-days: 30
 
@@ -139,12 +160,11 @@ jobs:
 
       - name: Prepare publish directory
         run: |
-          # Copy static files
-          cp repo/gpg.key repo/gpg.key || true
-          cp repo/CNAME repo/CNAME || true
-          cp repo/index.html repo/index.html || true
+          # Copy static files from source
+          cp -f repo/gpg.key repo/gpg.key 2>/dev/null || true
+          cp -f repo/CNAME repo/CNAME 2>/dev/null || true
+          cp -f repo/index.html repo/index.html 2>/dev/null || true
 
-          # Debug: show what's in repo
           echo "Contents of repo/:"
           find repo -type f | head -50
 
