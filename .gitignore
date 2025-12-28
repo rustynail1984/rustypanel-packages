@@ -1,0 +1,28 @@
+# Build outputs
+output/
+*.deb
+
+# Repository files (generated)
+repo/
+!repo/.gitkeep
+
+# Temporary build files
+/tmp/
+*.tar.gz
+*.tar.xz
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# GPG keys (never commit private keys!)
+*.gpg
+*.asc
+!gpg.key.example

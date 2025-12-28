@@ -1,0 +1,134 @@
+name: Build MariaDB Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      mariadb_version:
+        description: 'MariaDB Version (e.g., 11.4, 10.11, all)'
+        required: true
+        default: 'all'
+      distro:
+        description: 'Distribution (ubuntu-24.04, ubuntu-22.04, debian-12, all)'
+        required: true
+        default: 'all'
+  push:
+    tags:
+      - 'mariadb-*'
+
+env:
+  PACKAGE_NAME: rustypanel-mariadb
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set build matrix
+        id: set-matrix
+        run: |
+          if [ "${{ github.event.inputs.mariadb_version }}" = "all" ] || [ -z "${{ github.event.inputs.mariadb_version }}" ]; then
+            VERSIONS='["10.11", "11.4"]'
+          else
+            VERSIONS='["${{ github.event.inputs.mariadb_version }}"]'
+          fi
+
+          if [ "${{ github.event.inputs.distro }}" = "all" ] || [ -z "${{ github.event.inputs.distro }}" ]; then
+            DISTROS='["ubuntu-24.04", "ubuntu-22.04", "debian-13", "debian-12"]'
+          else
+            DISTROS='["${{ github.event.inputs.distro }}"]'
+          fi
+
+          ARCHS='["amd64", "arm64"]'
+
+          echo "matrix={\"mariadb_version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":${ARCHS}}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Parse distro info
+        id: distro
+        run: |
+          DISTRO="${{ matrix.distro }}"
+          if [[ "$DISTRO" == ubuntu-* ]]; then
+            echo "base=ubuntu" >> $GITHUB_OUTPUT
+            echo "version=${DISTRO#ubuntu-}" >> $GITHUB_OUTPUT
+            case "${DISTRO#ubuntu-}" in
+              "24.04") echo "codename=noble" >> $GITHUB_OUTPUT ;;
+              "22.04") echo "codename=jammy" >> $GITHUB_OUTPUT ;;
+            esac
+          elif [[ "$DISTRO" == debian-* ]]; then
+            echo "base=debian" >> $GITHUB_OUTPUT
+            echo "version=${DISTRO#debian-}" >> $GITHUB_OUTPUT
+            case "${DISTRO#debian-}" in
+              "13") echo "codename=trixie" >> $GITHUB_OUTPUT ;;
+              "12") echo "codename=bookworm" >> $GITHUB_OUTPUT ;;
+              "11") echo "codename=bullseye" >> $GITHUB_OUTPUT ;;
+            esac
+          fi
+
+      - name: Build MariaDB package
+        run: |
+          docker run --rm \
+            --platform linux/${{ matrix.arch }} \
+            -v ${{ github.workspace }}:/build \
+            -e MARIADB_VERSION=${{ matrix.mariadb_version }} \
+            -e DISTRO=${{ steps.distro.outputs.base }} \
+            -e DISTRO_VERSION=${{ steps.distro.outputs.version }} \
+            -e DISTRO_CODENAME=${{ steps.distro.outputs.codename }} \
+            -e ARCH=${{ matrix.arch }} \
+            ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} \
+            /build/packages/mariadb/build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mariadb${{ matrix.mariadb_version }}-${{ matrix.distro }}-${{ matrix.arch }}
+          path: output/*.deb
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+
+      - name: Setup GPG
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+
+      - name: Update APT repository
+        run: |
+          ./scripts/update-repo.sh packages/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          destination_dir: apt

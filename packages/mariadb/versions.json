@@ -1,0 +1,45 @@
+{
+  "versions": {
+    "11.4": {
+      "version": "11.4.4",
+      "status": "lts",
+      "eol": "2029-05-29"
+    },
+    "11.2": {
+      "version": "11.2.6",
+      "status": "stable",
+      "eol": "2028-11-21"
+    },
+    "10.11": {
+      "version": "10.11.10",
+      "status": "lts",
+      "eol": "2028-02-16"
+    },
+    "10.6": {
+      "version": "10.6.20",
+      "status": "lts",
+      "eol": "2026-07-06"
+    }
+  },
+  "configure_options": {
+    "common": [
+      "-DCMAKE_INSTALL_PREFIX=/rp/apps/mariadb/${VERSION}",
+      "-DMYSQL_DATADIR=/rp/data/mariadb/${VERSION}",
+      "-DSYSCONFDIR=/rp/apps/mariadb/${VERSION}/etc",
+      "-DMYSQL_UNIX_ADDR=/run/rustypanel/mariadb-${VERSION}.sock",
+      "-DWITH_INNOBASE_STORAGE_ENGINE=1",
+      "-DWITH_PARTITION_STORAGE_ENGINE=1",
+      "-DWITH_FEDERATED_STORAGE_ENGINE=1",
+      "-DWITH_BLACKHOLE_STORAGE_ENGINE=1",
+      "-DWITH_MYISAM_STORAGE_ENGINE=1",
+      "-DWITH_ARCHIVE_STORAGE_ENGINE=1",
+      "-DWITH_READLINE=1",
+      "-DWITH_SSL=system",
+      "-DWITH_ZLIB=system",
+      "-DWITH_LIBWRAP=0",
+      "-DENABLED_LOCAL_INFILE=1",
+      "-DDEFAULT_CHARSET=utf8mb4",
+      "-DDEFAULT_COLLATION=utf8mb4_general_ci"
+    ]
+  }
+}

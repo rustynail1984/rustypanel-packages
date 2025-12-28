@@ -1,0 +1,62 @@
+{
+  "versions": {
+    "mainline": {
+      "version": "1.27.3",
+      "status": "mainline",
+      "description": "Latest features, actively developed"
+    },
+    "stable": {
+      "version": "1.26.2",
+      "status": "stable",
+      "description": "Stable branch, recommended for production"
+    }
+  },
+  "modules": {
+    "bundled": [
+      "http_ssl_module",
+      "http_v2_module",
+      "http_v3_module",
+      "http_realip_module",
+      "http_addition_module",
+      "http_sub_module",
+      "http_dav_module",
+      "http_flv_module",
+      "http_mp4_module",
+      "http_gunzip_module",
+      "http_gzip_static_module",
+      "http_auth_request_module",
+      "http_random_index_module",
+      "http_secure_link_module",
+      "http_degradation_module",
+      "http_slice_module",
+      "http_stub_status_module",
+      "stream",
+      "stream_ssl_module",
+      "stream_realip_module",
+      "stream_ssl_preread_module"
+    ],
+    "dynamic": [
+      "http_geoip_module",
+      "stream_geoip_module",
+      "http_image_filter_module",
+      "http_xslt_module"
+    ],
+    "third_party": [
+      {
+        "name": "brotli",
+        "url": "https://github.com/google/ngx_brotli",
+        "description": "Brotli compression"
+      },
+      {
+        "name": "headers-more",
+        "url": "https://github.com/openresty/headers-more-nginx-module",
+        "description": "Set and clear headers"
+      },
+      {
+        "name": "cache-purge",
+        "url": "https://github.com/nginx-modules/ngx_cache_purge",
+        "description": "Purge content from FastCGI and proxy caches"
+      }
+    ]
+  }
+}
