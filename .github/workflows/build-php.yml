@@ -4,13 +4,36 @@ on:
   workflow_dispatch:
     inputs:
       php_version:
-        description: 'PHP Version (e.g., 8.3, 8.4, all)'
+        description: 'PHP Version'
         required: true
-        default: 'all'
+        default: '8.5'
+        type: choice
+        options:
+          - '7.4'
+          - '8.0'
+          - '8.1'
+          - '8.2'
+          - '8.3'
+          - '8.4'
+          - '8.5'
       distro:
-        description: 'Distribution (ubuntu-24.04, ubuntu-22.04, debian-12, all)'
+        description: 'Distribution'
         required: true
-        default: 'all'
+        default: 'ubuntu-24.04'
+        type: choice
+        options:
+          - 'ubuntu-24.04'
+          - 'ubuntu-22.04'
+          - 'debian-13'
+          - 'debian-12'
+      arch:
+        description: 'Architecture'
+        required: true
+        default: 'amd64'
+        type: choice
+        options:
+          - 'amd64'
+          - 'arm64'
   push:
     tags:
       - 'php-*'
@@ -19,44 +42,14 @@ env:
   PACKAGE_NAME: rustypanel-php
 
 jobs:
-  build-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set build matrix
-        id: set-matrix
-        run: |
-          if [ "${{ github.event.inputs.php_version }}" = "all" ] || [ -z "${{ github.event.inputs.php_version }}" ]; then
-            VERSIONS='["7.4", "8.0", "8.1", "8.2", "8.3", "8.4", "8.5"]'
-          else
-            VERSIONS='["${{ github.event.inputs.php_version }}"]'
-          fi
-
-          if [ "${{ github.event.inputs.distro }}" = "all" ] || [ -z "${{ github.event.inputs.distro }}" ]; then
-            DISTROS='["ubuntu-24.04", "ubuntu-22.04", "debian-13", "debian-12"]'
-          else
-            DISTROS='["${{ github.event.inputs.distro }}"]'
-          fi
-
-          ARCHS='["amd64", "arm64"]'
-
-          echo "matrix={\"php_version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":${ARCHS}}" >> $GITHUB_OUTPUT
-
   build:
-    needs: build-matrix
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up QEMU
-        if: matrix.arch == 'arm64'
+        if: ${{ github.event.inputs.arch == 'arm64' }}
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
@@ -64,10 +57,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Parse distro info
+      - name: Set distro variables
         id: distro
         run: |
-          DISTRO="${{ matrix.distro }}"
+          DISTRO="${{ github.event.inputs.distro }}"
+
           if [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
             echo "version=${DISTRO#ubuntu-}" >> $GITHUB_OUTPUT
@@ -85,25 +79,36 @@ jobs:
             esac
           fi
 
+          echo "Distro: $DISTRO"
+          echo "Base: $(echo $DISTRO | cut -d'-' -f1)"
+          echo "Version: $(echo $DISTRO | cut -d'-' -f2)"
+
+      - name: Create output directory
+        run: mkdir -p output
+
       - name: Build PHP package
         run: |
+          echo "Building PHP ${{ github.event.inputs.php_version }} for ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }}"
+
           docker run --rm \
-            --platform linux/${{ matrix.arch }} \
+            --platform linux/${{ github.event.inputs.arch }} \
             -v ${{ github.workspace }}:/build \
-            -e PHP_VERSION=${{ matrix.php_version }} \
+            -v ${{ github.workspace }}/output:/output \
+            -e VERSION=${{ github.event.inputs.php_version }} \
             -e DISTRO=${{ steps.distro.outputs.base }} \
             -e DISTRO_VERSION=${{ steps.distro.outputs.version }} \
             -e DISTRO_CODENAME=${{ steps.distro.outputs.codename }} \
-            -e ARCH=${{ matrix.arch }} \
+            -e ARCH=${{ github.event.inputs.arch }} \
+            -e OUTPUT_DIR=/output \
             ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} \
-            /build/packages/php/build.sh
+            bash /build/packages/php/build.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php${{ matrix.php_version }}-${{ matrix.distro }}-${{ matrix.arch }}
+          name: php${{ github.event.inputs.php_version }}-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
           path: output/*.deb
-          retention-days: 7
+          retention-days: 30
 
   publish:
     needs: build
@@ -132,4 +137,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo
           destination_dir: apt
-
