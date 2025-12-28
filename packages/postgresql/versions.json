@@ -1,0 +1,19 @@
+{
+  "versions": {
+    "17": {
+      "version": "17.2",
+      "status": "stable",
+      "eol": "2029-11-13"
+    },
+    "16": {
+      "version": "16.6",
+      "status": "stable",
+      "eol": "2028-11-09"
+    },
+    "15": {
+      "version": "15.10",
+      "status": "stable",
+      "eol": "2027-11-11"
+    }
+  }
+}

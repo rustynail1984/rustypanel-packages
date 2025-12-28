@@ -421,8 +421,8 @@ Architecture: ${ARCH}
 Installed-Size: ${installed_size}
 Depends: libc6, libpcre3, zlib1g, libgd3, libgeoip1, libxslt1.1
 Conflicts: nginx, nginx-common, nginx-full, nginx-light
-Maintainer: RustyPanel <packages@rustypanel.dev>
-Homepage: https://rustypanel.dev
+Maintainer: RustyPanel <packages@rustypanel.monity.io>
+Homepage: https://rustypanel.monity.io
 Description: NGINX ${NGINX_VERSION} for RustyPanel
  Pre-compiled NGINX ${NGINX_VERSION} (${NGINX_BRANCH}) web server.
  Installed to ${INSTALL_PREFIX} for RustyPanel integration.

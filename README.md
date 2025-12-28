@@ -7,18 +7,18 @@ Pre-compiled Debian/Ubuntu packages for the RustyPanel App Store.
 This repository provides optimized, pre-compiled packages available as "Quick Install" option in the RustyPanel App Store.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                    Installation Options                      │
-├─────────────────────────────────────────────────────────────┤
+├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│   ⚡ Quick Install              🔧 Compile from Source       │
+│   ⚡ Quick Install              🔧 Compile from Source      │
 │   ─────────────────             ──────────────────────       │
 │   • Pre-compiled                • Build from source          │
 │   • ~30 seconds                 • 10-30+ minutes             │
 │   • Tested & optimized          • Custom patches possible    │
 │   • Automatic updates           • Custom ./configure flags   │
 │                                                              │
-└─────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Supported Packages
@@ -27,16 +27,17 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 
 | Package | Versions | Architectures |
 |---------|----------|---------------|
-| `rustypanel-php` | 7.4, 8.0, 8.1, 8.2, 8.3, 8.4 | amd64, arm64 |
-| `rustypanel-nodejs` | 18, 20, 22 | amd64, arm64 |
+| `rustypanel-php` | 7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5 | amd64, arm64 |
+
+> **Note:** Node.js is managed via nvm (Node Version Manager), not as a system package.
 
 ### Databases
 
 | Package | Versions | Architectures |
 |---------|----------|---------------|
 | `rustypanel-mariadb` | 10.11, 11.4 | amd64, arm64 |
-| `rustypanel-mysql` | 8.0, 8.4 | amd64, arm64 |
-| `rustypanel-redis` | 7.2, 7.4 | amd64, arm64 |
+| `rustypanel-mysql` | 5.7, 8.0, 8.4 | amd64, arm64 |
+| `rustypanel-redis` | 7.2, 7.4, 8.0 | amd64, arm64 |
 | `rustypanel-postgresql` | 15, 16, 17 | amd64, arm64 |
 
 ### Web Servers
@@ -44,7 +45,15 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 | Package | Versions | Architectures |
 |---------|----------|---------------|
 | `rustypanel-nginx` | mainline, stable | amd64, arm64 |
+| `rustypanel-apache` | 2.4 | amd64, arm64 |
 | `rustypanel-caddy` | latest | amd64, arm64 |
+
+### Caching & Load Balancing
+
+| Package | Versions | Architectures |
+|---------|----------|---------------|
+| `rustypanel-varnish` | 7.5, 7.6 | amd64, arm64 |
+| `rustypanel-haproxy` | 2.9, 3.0 | amd64, arm64 |
 
 ## Installation
 
@@ -52,10 +61,10 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 
 ```bash
 # Import GPG key
-curl -fsSL https://packages.rustypanel.dev/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel-archive-keyring.gpg
+curl -fsSL https://mirror.rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel-archive-keyring.gpg
 
 # Add repository
-echo "deb [signed-by=/usr/share/keyrings/rustypanel-archive-keyring.gpg] https://packages.rustypanel.dev/apt stable main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+echo "deb [signed-by=/usr/share/keyrings/rustypanel-archive-keyring.gpg] https://mirror.rustypanel.monity.io/apt stable main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
 
 # Update package list
 sudo apt update
@@ -90,11 +99,8 @@ All RustyPanel packages are installed to `/rp/apps/`:
 │   │   └── 8.2/
 │   ├── mariadb/
 │   │   └── 11.4/
-│   ├── nginx/
-│   │   └── current/
-│   └── nodejs/
-│       ├── 20/
-│       └── 22/
+│   └── nginx/
+│       └── current/
 └── ...
 ```
 
@@ -186,6 +192,6 @@ MIT License - see [LICENSE](LICENSE)
 
 ## Links
 
-- [RustyPanel Main Project](https://github.com/rustypanel/rustypanel)
-- [Documentation](https://docs.rustypanel.dev)
+- [RustyPanel Main Project](https://github.com/rustnail1984/rustypanel)
+- [Documentation](https://rustypanel.monity.io/docs)
 - [Issue Tracker](https://github.com/rustypanel/packages/issues)

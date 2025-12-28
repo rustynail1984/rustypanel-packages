@@ -1,0 +1,19 @@
+{
+  "versions": {
+    "8.0": {
+      "version": "8.0.1",
+      "status": "stable",
+      "eol": null
+    },
+    "7.4": {
+      "version": "7.4.2",
+      "status": "stable",
+      "eol": null
+    },
+    "7.2": {
+      "version": "7.2.7",
+      "status": "stable",
+      "eol": null
+    }
+  }
+}

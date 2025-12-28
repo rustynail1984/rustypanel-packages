@@ -1,0 +1,15 @@
+{
+  "versions": {
+    "latest": {
+      "version": "2.9.1",
+      "status": "stable"
+    }
+  },
+  "plugins": {
+    "bundled": [
+      "cloudflare-dns",
+      "cache-handler",
+      "rate-limit"
+    ]
+  }
+}

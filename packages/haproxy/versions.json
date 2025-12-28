@@ -1,0 +1,14 @@
+{
+  "versions": {
+    "3.0": {
+      "version": "3.0.7",
+      "status": "lts",
+      "eol": "2029-Q1"
+    },
+    "2.9": {
+      "version": "2.9.12",
+      "status": "stable",
+      "eol": "2025-Q1"
+    }
+  }
+}

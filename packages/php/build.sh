@@ -24,10 +24,11 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # PHP version mapping
 declare -A PHP_VERSIONS=(
-    ["8.4"]="8.4.2"
-    ["8.3"]="8.3.15"
-    ["8.2"]="8.2.27"
-    ["8.1"]="8.1.31"
+    ["8.5"]="8.5.1"
+    ["8.4"]="8.4.16"
+    ["8.3"]="8.3.29"
+    ["8.2"]="8.2.30"
+    ["8.1"]="8.1.34"
     ["8.0"]="8.0.30"
     ["7.4"]="7.4.33"
 )
@@ -266,8 +267,8 @@ Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
 Depends: libc6, libcurl4, libgd3, libicu72 | libicu70, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libssl3, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6
-Maintainer: RustyPanel <packages@rustypanel.dev>
-Homepage: https://rustypanel.dev
+Maintainer: RustyPanel <packages@rustypanel.monity.io>
+Homepage: https://rustypanel.monity.io
 Description: PHP ${PHP_MAJOR_MINOR} for RustyPanel
  Pre-compiled PHP ${PHP_FULL_VERSION} with FPM and common extensions.
  Installed to ${INSTALL_PREFIX} for RustyPanel integration.

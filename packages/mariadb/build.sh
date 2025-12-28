@@ -249,8 +249,8 @@ Architecture: ${ARCH}
 Installed-Size: ${installed_size}
 Depends: libc6, libssl3, libncurses6, zlib1g, liblz4-1, libzstd1, libjemalloc2, libaio1
 Conflicts: mysql-server, mariadb-server
-Maintainer: RustyPanel <packages@rustypanel.dev>
-Homepage: https://rustypanel.dev
+Maintainer: RustyPanel <packages@rustypanel.monity.io>
+Homepage: https://rustypanel.monity.io
 Description: MariaDB ${MARIADB_MAJOR_MINOR} for RustyPanel
  Pre-compiled MariaDB ${MARIADB_FULL_VERSION} database server.
  Installed to ${INSTALL_PREFIX} for RustyPanel integration.

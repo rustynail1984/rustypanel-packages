@@ -1,0 +1,25 @@
+{
+  "versions": {
+    "2.4": {
+      "version": "2.4.63",
+      "status": "stable",
+      "eol": null
+    }
+  },
+  "modules": {
+    "bundled": [
+      "mod_ssl",
+      "mod_rewrite",
+      "mod_headers",
+      "mod_expires",
+      "mod_deflate",
+      "mod_proxy",
+      "mod_proxy_fcgi",
+      "mod_proxy_http",
+      "mod_proxy_wstunnel",
+      "mod_http2",
+      "mod_brotli",
+      "mod_security2"
+    ]
+  }
+}
