@@ -118,6 +118,15 @@ jobs:
         with:
           path: packages
 
+      - name: Fetch existing repository
+        run: |
+          git fetch origin gh-pages:gh-pages || true
+          if git show-ref --verify --quiet refs/heads/gh-pages; then
+            git checkout gh-pages -- pool/ || true
+            mkdir -p repo
+            cp -r pool repo/ 2>/dev/null || true
+          fi
+
       - name: Setup GPG
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
@@ -131,4 +140,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo
-          destination_dir: apt
+          keep_files: true
+          cname: mirror-rustypanel.monity.io

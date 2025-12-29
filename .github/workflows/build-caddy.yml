@@ -1,26 +1,8 @@
-name: Build PHP Packages
+name: Build Caddy Packages
 
 on:
   workflow_dispatch:
     inputs:
-      php_version:
-        description: 'PHP Version (ignored if build_all is true)'
-        required: true
-        default: '8.5'
-        type: choice
-        options:
-          - '7.4'
-          - '8.0'
-          - '8.1'
-          - '8.2'
-          - '8.3'
-          - '8.4'
-          - '8.5'
-      build_all:
-        description: 'Build ALL PHP versions'
-        required: false
-        default: false
-        type: boolean
       distro:
         description: 'Distribution'
         required: true
@@ -46,26 +28,8 @@ on:
         type: boolean
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Set build matrix
-        id: set-matrix
-        run: |
-          if [[ "${{ github.event.inputs.build_all }}" == "true" ]]; then
-            echo 'matrix={"php_version":["7.4","8.0","8.1","8.2","8.3","8.4","8.5"]}' >> $GITHUB_OUTPUT
-          else
-            echo 'matrix={"php_version":["${{ github.event.inputs.php_version }}"]}' >> $GITHUB_OUTPUT
-          fi
-
   build:
-    needs: prepare
-    runs-on: ${{ github.event.inputs.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
-    strategy:
-      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
-      fail-fast: false
+    runs-on: ${{ github.event.inputs.arch == 'arm64' && 'self-hosted-arm64' || 'ubuntu-latest' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -76,16 +40,9 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          PHP_VERSION="${{ matrix.php_version }}"
           DISTRO="${{ github.event.inputs.distro }}"
 
-          # PHP 7.4 and 8.0 require OpenSSL 1.1 (only available on Debian 11)
-          if [[ "$PHP_VERSION" == "7.4" ]] || [[ "$PHP_VERSION" == "8.0" ]]; then
-            echo "::notice::PHP $PHP_VERSION requires OpenSSL 1.1 - using Debian 11 (Bullseye)"
-            echo "base=debian" >> $GITHUB_OUTPUT
-            echo "version=11" >> $GITHUB_OUTPUT
-            echo "codename=bullseye" >> $GITHUB_OUTPUT
-          elif [[ "$DISTRO" == ubuntu-* ]]; then
+          if [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
             echo "version=${DISTRO#ubuntu-}" >> $GITHUB_OUTPUT
             case "${DISTRO#ubuntu-}" in
@@ -104,27 +61,27 @@ jobs:
       - name: Create output directory
         run: mkdir -p output
 
-      - name: Build PHP ${{ matrix.php_version }}
+      - name: Build Caddy
         run: |
-          echo "Building PHP ${{ matrix.php_version }} for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }}"
+          echo "Building Caddy for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.codename }}"
 
           docker run --rm \
             --platform linux/${{ github.event.inputs.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
-            -e VERSION=${{ matrix.php_version }} \
+            -e VERSION=latest \
             -e DISTRO=${{ steps.vars.outputs.base }} \
             -e DISTRO_VERSION=${{ steps.vars.outputs.version }} \
             -e DISTRO_CODENAME=${{ steps.vars.outputs.codename }} \
             -e ARCH=${{ github.event.inputs.arch }} \
             -e OUTPUT_DIR=/output \
             ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.codename }} \
-            bash /build/packages/php/build.sh
+            bash /build/packages/caddy/build.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php${{ matrix.php_version }}-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
+          name: caddy-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
           path: output/*.deb
           retention-days: 30
 
@@ -167,16 +124,6 @@ jobs:
         run: |
           chmod +x ./scripts/update-repo.sh
           ./scripts/update-repo.sh packages/
-
-      - name: Prepare publish directory
-        run: |
-          # Copy static files from source
-          cp -f repo/gpg.key repo/gpg.key 2>/dev/null || true
-          cp -f repo/CNAME repo/CNAME 2>/dev/null || true
-          cp -f repo/index.html repo/index.html 2>/dev/null || true
-
-          echo "Contents of repo/:"
-          find repo -type f | head -50
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
