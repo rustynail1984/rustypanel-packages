@@ -36,7 +36,7 @@ fi
 
 REDIS_VERSION_SHORT="${REDIS_BRANCH//./}"
 PACKAGE_NAME="rustypanel-redis${REDIS_VERSION_SHORT}"
-PACKAGE_VERSION="${REDIS_VERSION}-1"
+PACKAGE_VERSION="${REDIS_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -173,7 +173,7 @@ Section: database
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libssl3, libsystemd0
+Depends: libc6, libssl3 | libssl1.1, libsystemd0
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io
 Description: Redis ${REDIS_BRANCH} for RustyPanel

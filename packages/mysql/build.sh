@@ -37,7 +37,7 @@ fi
 
 MYSQL_VERSION_SHORT="${MYSQL_BRANCH//./}"
 PACKAGE_NAME="rustypanel-mysql${MYSQL_VERSION_SHORT}"
-PACKAGE_VERSION="${MYSQL_VERSION}-1"
+PACKAGE_VERSION="${MYSQL_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -239,7 +239,7 @@ Section: database
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libssl3, libncurses6, zlib1g, liblz4-1, libzstd1, libaio1, libnuma1
+Depends: libc6, libssl3 | libssl1.1, libncurses6 | libncurses5, zlib1g, liblz4-1, libzstd1, libaio1t64 | libaio1, libnuma1
 Conflicts: mysql-server
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

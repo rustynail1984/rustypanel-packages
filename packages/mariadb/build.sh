@@ -39,7 +39,7 @@ fi
 
 MARIADB_VERSION_SHORT="${MARIADB_MAJOR_MINOR//./}"
 PACKAGE_NAME="rustypanel-mariadb${MARIADB_VERSION_SHORT}"
-PACKAGE_VERSION="${MARIADB_FULL_VERSION}-1"
+PACKAGE_VERSION="${MARIADB_FULL_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -247,7 +247,7 @@ Section: database
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libssl3, libncurses6, zlib1g, liblz4-1, libzstd1, libjemalloc2, libaio1
+Depends: libc6, libssl3 | libssl1.1, libncurses6 | libncurses5, zlib1g, liblz4-1, libzstd1, libjemalloc2, libaio1t64 | libaio1
 Conflicts: mysql-server, mariadb-server
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

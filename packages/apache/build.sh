@@ -36,7 +36,7 @@ APR_VERSION="1.7.5"
 APR_UTIL_VERSION="1.6.3"
 
 PACKAGE_NAME="rustypanel-apache"
-PACKAGE_VERSION="${APACHE_VERSION}-1"
+PACKAGE_VERSION="${APACHE_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -205,7 +205,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libpcre3, libssl3, libxml2, libnghttp2-14, libbrotli1, zlib1g
+Depends: libc6, libpcre3 | libpcre2-8-0, libssl3 | libssl1.1, libxml2, libnghttp2-14, libbrotli1, zlib1g
 Conflicts: apache2, apache2-bin
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

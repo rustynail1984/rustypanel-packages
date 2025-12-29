@@ -142,13 +142,16 @@ Packages are automatically built via GitHub Actions:
 ## Package Naming Convention
 
 ```
-rustypanel-{app}{major}{minor}_{version}-{build}_{arch}.deb
+rustypanel-{app}{major}{minor}_{version}-{build}~{distro}{distro_version}_{arch}.deb
 
 Examples:
-rustypanel-php83_8.3.15-1_amd64.deb
-rustypanel-mariadb114_11.4.3-1_arm64.deb
-rustypanel-nginx_1.27.3-1_amd64.deb
+rustypanel-php83_8.3.15-1~ubuntu24.04_amd64.deb
+rustypanel-php83_8.3.15-1~debian12_amd64.deb
+rustypanel-mariadb114_11.4.3-1~ubuntu22.04_arm64.deb
+rustypanel-nginx_1.27.3-1~debian13_amd64.deb
 ```
+
+Each package is built specifically for its target distribution to ensure binary compatibility.
 
 ## Configuration
 

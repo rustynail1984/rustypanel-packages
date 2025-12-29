@@ -41,7 +41,7 @@ fi
 
 PHP_VERSION_SHORT="${PHP_MAJOR_MINOR//./}"
 PACKAGE_NAME="rustypanel-php${PHP_VERSION_SHORT}"
-PACKAGE_VERSION="${PHP_FULL_VERSION}-1"
+PACKAGE_VERSION="${PHP_FULL_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -265,7 +265,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libcurl4, libgd3, libicu72 | libicu70, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libssl3, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6
+Depends: libc6, libcurl4, libgd3, libicu74 | libicu72 | libicu70, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libssl3, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io
 Description: PHP ${PHP_MAJOR_MINOR} for RustyPanel

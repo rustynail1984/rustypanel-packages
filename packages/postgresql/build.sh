@@ -36,7 +36,7 @@ if [[ -z "$PG_VERSION" ]]; then
 fi
 
 PACKAGE_NAME="rustypanel-postgresql${PG_BRANCH}"
-PACKAGE_VERSION="${PG_VERSION}-1"
+PACKAGE_VERSION="${PG_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -244,7 +244,7 @@ Section: database
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libssl3, libreadline8, zlib1g, libxml2, libxslt1.1, libldap-2.5-0, libpam0g, libsystemd0, libuuid1, liblz4-1, libzstd1, libicu74 | libicu72
+Depends: libc6, libssl3, libreadline8, zlib1g, libxml2, libxslt1.1, libldap-2.5-0 | libldap-2.4-2, libpam0g, libsystemd0, libuuid1, liblz4-1, libzstd1, libicu74 | libicu72 | libicu70
 Conflicts: postgresql, postgresql-${PG_BRANCH}
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

@@ -26,7 +26,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 CADDY_VERSION="2.9.1"
 
 PACKAGE_NAME="rustypanel-caddy"
-PACKAGE_VERSION="${CADDY_VERSION}-1"
+PACKAGE_VERSION="${CADDY_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 # Map arch to Go arch
 case "$ARCH" in

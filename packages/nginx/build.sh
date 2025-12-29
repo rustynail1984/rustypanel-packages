@@ -35,7 +35,7 @@ if [[ -z "$NGINX_VERSION" ]]; then
 fi
 
 PACKAGE_NAME="rustypanel-nginx"
-PACKAGE_VERSION="${NGINX_VERSION}-1"
+PACKAGE_VERSION="${NGINX_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 # OpenSSL version for HTTP/3 support
 OPENSSL_VERSION="3.2.1"
@@ -419,7 +419,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libpcre3, zlib1g, libgd3, libgeoip1, libxslt1.1
+Depends: libc6, libpcre3 | libpcre2-8-0, zlib1g, libgd3, libgeoip1 | libmaxminddb0, libxslt1.1
 Conflicts: nginx, nginx-common, nginx-full, nginx-light
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

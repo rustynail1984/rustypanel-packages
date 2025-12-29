@@ -34,7 +34,7 @@ if [[ -z "$HAPROXY_VERSION" ]]; then
 fi
 
 PACKAGE_NAME="rustypanel-haproxy"
-PACKAGE_VERSION="${HAPROXY_VERSION}-1"
+PACKAGE_VERSION="${HAPROXY_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
 install_dependencies() {
     log_info "Installing build dependencies..."
@@ -212,7 +212,7 @@ Section: net
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libssl3, libpcre2-8-0, libsystemd0, liblua5.4-0, zlib1g
+Depends: libc6, libssl3 | libssl1.1, libpcre2-8-0, libsystemd0, liblua5.4-0 | liblua5.3-0, zlib1g
 Conflicts: haproxy
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io
