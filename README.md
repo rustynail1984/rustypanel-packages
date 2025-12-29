@@ -2,6 +2,8 @@
 
 Pre-compiled Debian/Ubuntu packages for the RustyPanel App Store.
 
+**Repository:** [https://mirror-rustypanel.monity.io/](https://mirror-rustypanel.monity.io/)
+
 ## Overview
 
 This repository provides optimized, pre-compiled packages available as "Quick Install" option in the RustyPanel App Store.
@@ -198,6 +200,7 @@ MIT License - see [LICENSE](LICENSE)
 
 ## Links
 
-- [RustyPanel Main Project](https://github.com/rustnail1984/rustypanel)
+- [Package Repository / Mirror](https://mirror-rustypanel.monity.io/)
+- [RustyPanel Main Project](https://github.com/rustynail1984/rustypanel)
 - [Documentation](https://rustypanel.monity.io/docs)
 - [Issue Tracker](https://github.com/rustypanel/packages/issues)
