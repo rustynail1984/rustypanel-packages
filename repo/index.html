@@ -116,13 +116,19 @@
 
     <h2>Quick Start</h2>
 
-    <h3>1. Import GPG Key</h3>
+    <h3>1. Install Prerequisites</h3>
+    <div class="cmd">
+        <span class="comment"># Install required tools (if not already installed)</span><br>
+        sudo apt update && sudo apt install -y curl gnupg
+    </div>
+
+    <h3>2. Import GPG Key</h3>
     <div class="cmd">
         <span class="comment"># Download and install the repository signing key</span><br>
         curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel.gpg
     </div>
 
-    <h3>2. Add Repository</h3>
+    <h3>3. Add Repository</h3>
     <p>Choose your distribution:</p>
 
     <div class="distro-tabs">
@@ -153,7 +159,7 @@
         </div>
     </div>
 
-    <h3>3. Install Packages</h3>
+    <h3>4. Install Packages</h3>
     <div class="cmd">
         <span class="comment"># Update package list</span><br>
         sudo apt update<br><br>
