@@ -76,9 +76,16 @@ jobs:
       - name: Set variables
         id: vars
         run: |
+          PHP_VERSION="${{ matrix.php_version }}"
           DISTRO="${{ github.event.inputs.distro }}"
 
-          if [[ "$DISTRO" == ubuntu-* ]]; then
+          # PHP 7.4 and 8.0 require OpenSSL 1.1 (only available on Debian 11)
+          if [[ "$PHP_VERSION" == "7.4" ]] || [[ "$PHP_VERSION" == "8.0" ]]; then
+            echo "::notice::PHP $PHP_VERSION requires OpenSSL 1.1 - using Debian 11 (Bullseye)"
+            echo "base=debian" >> $GITHUB_OUTPUT
+            echo "version=11" >> $GITHUB_OUTPUT
+            echo "codename=bullseye" >> $GITHUB_OUTPUT
+          elif [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
             echo "version=${DISTRO#ubuntu-}" >> $GITHUB_OUTPUT
             case "${DISTRO#ubuntu-}" in
@@ -124,7 +131,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.publish == 'true' }}
+    if: ${{ always() && github.event.inputs.publish == 'true' }}
 
     steps:
       - uses: actions/checkout@v4
