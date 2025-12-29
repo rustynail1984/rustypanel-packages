@@ -56,7 +56,6 @@ install_dependencies() {
         libssl-dev \
         libncurses5-dev \
         libtirpc-dev \
-        librpc-dev \
         libaio-dev \
         libnuma-dev \
         libldap2-dev \

@@ -63,19 +63,16 @@ generate_packages_file() {
 
     log_info "Generating Packages for ${dist}/${arch}..."
 
-    # Find all .deb files and generate Packages file
     cd "$REPO_DIR"
 
-    > "$packages_file"
+    # Generate Packages file by scanning the entire pool
+    # Filter by architecture using dpkg-scanpackages with arch option
+    dpkg-scanpackages --arch "$arch" --multiversion pool /dev/null 2>/dev/null > "$packages_file" || true
 
-    find pool -name "*.deb" | while read -r deb; do
-        # Check if this deb is for the right architecture
-        deb_arch=$(dpkg-deb -f "$deb" Architecture)
-        if [[ "$deb_arch" == "$arch" ]] || [[ "$deb_arch" == "all" ]]; then
-            dpkg-scanpackages --multiversion "$(dirname "$deb")" /dev/null 2>/dev/null | \
-                sed "s|$(dirname "$deb")|pool/main|" >> "$packages_file"
-        fi
-    done
+    # Also include arch=all packages
+    if [[ "$arch" != "all" ]]; then
+        dpkg-scanpackages --arch all --multiversion pool /dev/null 2>/dev/null >> "$packages_file" || true
+    fi
 
     # Compress
     gzip -9 -k -f "$packages_file"

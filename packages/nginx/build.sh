@@ -149,7 +149,7 @@ configure_nginx() {
         --add-module=../ngx_brotli \
         --add-module=../headers-more-nginx-module \
         --add-dynamic-module=../ngx_cache_purge \
-        --with-cc-opt="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong" \
+        --with-cc-opt="-O2 -g -pipe -Wall -fexceptions -fstack-protector-strong -Wno-error=unused-variable" \
         --with-ld-opt="-Wl,-z,relro -Wl,-z,now"
 }
 

@@ -70,17 +70,20 @@ download_sources() {
 
     # APR
     log_info "Downloading APR ${APR_VERSION}..."
-    wget -q "https://dlcdn.apache.org/apr/apr-${APR_VERSION}.tar.gz" -O apr.tar.gz
+    wget -q --tries=3 "https://archive.apache.org/dist/apr/apr-${APR_VERSION}.tar.gz" -O apr.tar.gz \
+        || wget -q --tries=3 "https://dlcdn.apache.org/apr/apr-${APR_VERSION}.tar.gz" -O apr.tar.gz
     tar -xzf apr.tar.gz
 
     # APR-util
     log_info "Downloading APR-util ${APR_UTIL_VERSION}..."
-    wget -q "https://dlcdn.apache.org/apr/apr-util-${APR_UTIL_VERSION}.tar.gz" -O apr-util.tar.gz
+    wget -q --tries=3 "https://archive.apache.org/dist/apr/apr-util-${APR_UTIL_VERSION}.tar.gz" -O apr-util.tar.gz \
+        || wget -q --tries=3 "https://dlcdn.apache.org/apr/apr-util-${APR_UTIL_VERSION}.tar.gz" -O apr-util.tar.gz
     tar -xzf apr-util.tar.gz
 
     # Apache HTTPD
     log_info "Downloading Apache ${APACHE_VERSION}..."
-    wget -q "https://dlcdn.apache.org/httpd/httpd-${APACHE_VERSION}.tar.gz" -O httpd.tar.gz
+    wget -q --tries=3 "https://archive.apache.org/dist/httpd/httpd-${APACHE_VERSION}.tar.gz" -O httpd.tar.gz \
+        || wget -q --tries=3 "https://dlcdn.apache.org/httpd/httpd-${APACHE_VERSION}.tar.gz" -O httpd.tar.gz
     tar -xzf httpd.tar.gz
 
     # Move APR into srclib

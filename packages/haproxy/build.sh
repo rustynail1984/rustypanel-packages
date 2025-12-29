@@ -51,7 +51,6 @@ install_dependencies() {
         libpcre2-dev \
         libsystemd-dev \
         liblua5.4-dev \
-        libprometheusc-dev \
         zlib1g-dev \
         dpkg-dev \
         fakeroot

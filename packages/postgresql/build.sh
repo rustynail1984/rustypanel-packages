@@ -102,7 +102,9 @@ configure_postgresql() {
 build_postgresql() {
     log_info "Building PostgreSQL..."
 
-    make -j"$(nproc)" world
+    # Build PostgreSQL core + contrib (skip docs - requires docbook/xsltproc)
+    make -j"$(nproc)"
+    make -j"$(nproc)" -C contrib
 }
 
 create_package_structure() {
@@ -114,8 +116,9 @@ create_package_structure() {
     mkdir -p "$pkg_dir"
     mkdir -p "$debian_dir"
 
-    # Install PostgreSQL to package directory
-    make DESTDIR="$pkg_dir" install-world
+    # Install PostgreSQL core + contrib to package directory
+    make DESTDIR="$pkg_dir" install
+    make DESTDIR="$pkg_dir" -C contrib install
 
     # Create directories
     mkdir -p "${pkg_dir}${INSTALL_PREFIX}/etc"
