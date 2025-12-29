@@ -60,6 +60,7 @@ install_dependencies() {
         libnuma-dev \
         libldap2-dev \
         libsasl2-dev \
+        libsystemd-dev \
         libcurl4-openssl-dev \
         libevent-dev \
         liblz4-dev \

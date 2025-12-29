@@ -132,6 +132,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: ${{ always() && github.event.inputs.publish == 'true' }}
+    concurrency:
+      group: apt-repo-publish
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4

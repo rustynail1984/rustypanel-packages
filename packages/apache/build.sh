@@ -52,6 +52,7 @@ install_dependencies() {
         libpcre3-dev \
         libssl-dev \
         libxml2-dev \
+        libexpat1-dev \
         libcurl4-openssl-dev \
         liblua5.4-dev \
         libnghttp2-dev \

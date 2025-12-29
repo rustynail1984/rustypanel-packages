@@ -109,6 +109,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    concurrency:
+      group: apt-repo-publish
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4
