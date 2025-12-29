@@ -51,6 +51,13 @@
             background: #252a31;
             padding: 15px;
             border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .package-card:hover {
+            border-color: #e45a27;
+            transform: translateY(-2px);
         }
         .package-card h4 {
             margin: 0 0 8px 0;
@@ -67,6 +74,11 @@
             font-family: monospace;
             font-size: 0.8rem;
             color: #888;
+        }
+        .package-card .click-hint {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #666;
         }
         .distro-tabs {
             display: flex;
@@ -108,6 +120,118 @@
             font-size: 0.85rem;
         }
         footer a { color: #888; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: #1e2227;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #e45a27;
+            font-size: 1.3rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #fff; }
+        .modal-description {
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .version-label {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .version-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .version-btn {
+            background: #252a31;
+            border: 1px solid #333;
+            color: #f5f5f4;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .version-btn:hover {
+            border-color: #e45a27;
+        }
+        .version-btn.active {
+            background: #e45a27;
+            border-color: #e45a27;
+            color: #fff;
+        }
+        .install-section {
+            background: #252a31;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .install-label {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        .install-command {
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #4ec9b0;
+            word-break: break-all;
+            user-select: all;
+        }
+        .copy-btn {
+            background: #e45a27;
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: #c94820; }
+        .copy-btn.copied { background: #27ae60; }
     </style>
 </head>
 <body>
@@ -163,59 +287,59 @@
     <div class="cmd">
         <span class="comment"># Update package list</span><br>
         sudo apt update<br><br>
-        <span class="comment"># Example: Install PHP 8.4</span><br>
-        sudo apt install rustypanel-php84
+        <span class="comment"># Click on a package below to get the install command</span>
     </div>
 
     <h2>Available Packages</h2>
+    <p style="color: #888; font-size: 0.85rem;">Click on a package to select version and get install command</p>
 
     <div class="packages-grid">
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('php')">
             <h4>PHP</h4>
             <p>PHP runtime with common extensions, PHP-FPM included</p>
             <div class="versions">7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('mariadb')">
             <h4>MariaDB</h4>
             <p>MySQL-compatible database server</p>
             <div class="versions">10.11, 11.4</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('mysql')">
             <h4>MySQL</h4>
             <p>Oracle MySQL database server</p>
             <div class="versions">5.7, 8.0, 8.4</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('postgresql')">
             <h4>PostgreSQL</h4>
             <p>Advanced open-source database</p>
             <div class="versions">15, 16, 17</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('redis')">
             <h4>Redis</h4>
             <p>In-memory data store</p>
             <div class="versions">7.2, 7.4, 8.0</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('nginx')">
             <h4>NGINX</h4>
             <p>High-performance web server</p>
             <div class="versions">mainline, stable</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('apache')">
             <h4>Apache</h4>
             <p>Popular web server</p>
             <div class="versions">2.4</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('caddy')">
             <h4>Caddy</h4>
             <p>Modern web server with automatic HTTPS</p>
             <div class="versions">latest</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('varnish')">
             <h4>Varnish</h4>
             <p>HTTP accelerator / caching proxy</p>
             <div class="versions">7.5, 7.6</div>
         </div>
-        <div class="package-card">
+        <div class="package-card" onclick="openModal('haproxy')">
             <h4>HAProxy</h4>
             <p>Load balancer and proxy server</p>
             <div class="versions">2.9, 3.0</div>
@@ -235,16 +359,6 @@
         </a>
     </div>
 
-    <h2>Package Naming</h2>
-    <p>Packages follow the naming convention: <code>rustypanel-{app}{version}</code></p>
-    <div class="cmd">
-        <span class="comment"># Examples:</span><br>
-        sudo apt install rustypanel-php84      <span class="comment"># PHP 8.4</span><br>
-        sudo apt install rustypanel-mariadb114 <span class="comment"># MariaDB 11.4</span><br>
-        sudo apt install rustypanel-redis80    <span class="comment"># Redis 8.0</span><br>
-        sudo apt install rustypanel-nginx      <span class="comment"># NGINX</span>
-    </div>
-
     <h2>Installation Path</h2>
     <p>All packages are installed to <code>/rp/apps/</code> to avoid conflicts with system packages:</p>
     <pre><code>/rp/apps/
@@ -261,13 +375,152 @@
         <a href="https://github.com/rustynail1984/rustypanel-packages">Package Source</a>
     </footer>
 
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title">Package</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <p class="modal-description" id="modal-description"></p>
+            <div class="version-label">Select Version:</div>
+            <div class="version-buttons" id="version-buttons"></div>
+            <div class="install-section">
+                <div class="install-label">Install Command:</div>
+                <div class="install-command" id="install-command">sudo apt install rustypanel-php84</div>
+                <button class="copy-btn" onclick="copyCommand()">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const packages = {
+            php: {
+                name: 'PHP',
+                description: 'PHP runtime with common extensions (bcmath, curl, gd, intl, mbstring, mysql, pgsql, redis, zip, etc.) and PHP-FPM included.',
+                versions: ['8.5', '8.4', '8.3', '8.2', '8.1', '8.0', '7.4'],
+                format: v => `rustypanel-php${v.replace('.', '')}`
+            },
+            mariadb: {
+                name: 'MariaDB',
+                description: 'MySQL-compatible database server with InnoDB, performance optimizations, and easy migration from MySQL.',
+                versions: ['11.4', '10.11'],
+                format: v => `rustypanel-mariadb${v.replace('.', '')}`
+            },
+            mysql: {
+                name: 'MySQL',
+                description: 'Oracle MySQL database server with InnoDB storage engine and optimized configuration.',
+                versions: ['8.4', '8.0', '5.7'],
+                format: v => `rustypanel-mysql${v.replace('.', '')}`
+            },
+            postgresql: {
+                name: 'PostgreSQL',
+                description: 'Advanced open-source relational database with full SQL compliance, JSONB, and extensibility.',
+                versions: ['17', '16', '15'],
+                format: v => `rustypanel-postgresql${v}`
+            },
+            redis: {
+                name: 'Redis',
+                description: 'In-memory data store for caching, sessions, queues, and real-time applications.',
+                versions: ['8.0', '7.4', '7.2'],
+                format: v => `rustypanel-redis${v.replace('.', '')}`
+            },
+            nginx: {
+                name: 'NGINX',
+                description: 'High-performance web server with HTTP/2, HTTP/3 (QUIC), Brotli compression, and caching modules.',
+                versions: ['mainline', 'stable'],
+                format: v => 'rustypanel-nginx'
+            },
+            apache: {
+                name: 'Apache',
+                description: 'Popular web server with HTTP/2, mod_proxy, mod_rewrite, and Event MPM.',
+                versions: ['2.4'],
+                format: v => 'rustypanel-apache'
+            },
+            caddy: {
+                name: 'Caddy',
+                description: 'Modern web server with automatic HTTPS, HTTP/3, and simple configuration.',
+                versions: ['latest'],
+                format: v => 'rustypanel-caddy'
+            },
+            varnish: {
+                name: 'Varnish',
+                description: 'HTTP accelerator and caching reverse proxy for high-traffic websites.',
+                versions: ['7.6', '7.5'],
+                format: v => `rustypanel-varnish${v.replace('.', '')}`
+            },
+            haproxy: {
+                name: 'HAProxy',
+                description: 'Reliable load balancer and proxy server with health checks and stats dashboard.',
+                versions: ['3.0', '2.9'],
+                format: v => `rustypanel-haproxy${v.replace('.', '')}`
+            }
+        };
+
+        let currentPackage = null;
+        let selectedVersion = null;
+
+        function openModal(pkg) {
+            const data = packages[pkg];
+            currentPackage = pkg;
+            selectedVersion = data.versions[0];
+
+            document.getElementById('modal-title').textContent = data.name;
+            document.getElementById('modal-description').textContent = data.description;
+
+            const buttonsContainer = document.getElementById('version-buttons');
+            buttonsContainer.innerHTML = data.versions.map((v, i) =>
+                `<button class="version-btn ${i === 0 ? 'active' : ''}" onclick="selectVersion('${v}')">${v}</button>`
+            ).join('');
+
+            updateInstallCommand();
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal(event) {
+            if (!event || event.target === document.getElementById('modal-overlay')) {
+                document.getElementById('modal-overlay').classList.remove('active');
+            }
+        }
+
+        function selectVersion(version) {
+            selectedVersion = version;
+            document.querySelectorAll('.version-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === version);
+            });
+            updateInstallCommand();
+        }
+
+        function updateInstallCommand() {
+            const data = packages[currentPackage];
+            const packageName = data.format(selectedVersion);
+            document.getElementById('install-command').textContent = `sudo apt install ${packageName}`;
+        }
+
+        function copyCommand() {
+            const command = document.getElementById('install-command').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy to Clipboard';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
         function showDistro(codename) {
             document.querySelectorAll('.distro-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.distro-content').forEach(c => c.classList.remove('active'));
             document.querySelector(`[onclick="showDistro('${codename}')"]`).classList.add('active');
             document.getElementById('distro-' + codename).classList.add('active');
         }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
     </script>
 </body>
 </html>
