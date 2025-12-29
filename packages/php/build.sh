@@ -84,7 +84,6 @@ install_dependencies() {
         libgmp-dev \
         libicu-dev \
         libkrb5-dev \
-        libc-client-dev \
         libldap2-dev \
         libsasl2-dev \
         libtidy-dev \

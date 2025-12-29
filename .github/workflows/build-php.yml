@@ -118,7 +118,7 @@ jobs:
             -e DISTRO_CODENAME=${{ steps.vars.outputs.codename }} \
             -e ARCH=${{ github.event.inputs.arch }} \
             -e OUTPUT_DIR=/output \
-            ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }} \
+            ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.codename }} \
             bash /build/packages/php/build.sh
 
       - name: Upload artifact
