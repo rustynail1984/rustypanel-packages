@@ -107,7 +107,7 @@ configure_mysql() {
         -DENABLED_LOCAL_INFILE=ON
         -DDEFAULT_CHARSET=utf8mb4
         -DDEFAULT_COLLATION=utf8mb4_general_ci
-        -DWITH_SYSTEMD=ON
+        -DWITH_SYSTEMD=OFF
     )
 
     # MySQL 5.7 specific options
