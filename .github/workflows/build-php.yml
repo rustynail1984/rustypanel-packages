@@ -6,7 +6,7 @@ on:
       php_version:
         description: 'PHP Version (ignored if build_all is true)'
         required: true
-        default: '8.5'
+        default: '8.4'
         type: choice
         options:
           - '7.4'
@@ -21,8 +21,13 @@ on:
         required: false
         default: false
         type: boolean
+      build_all_distros:
+        description: 'Build for ALL distros and architectures'
+        required: false
+        default: false
+        type: boolean
       distro:
-        description: 'Distribution'
+        description: 'Distribution (ignored if build_all_distros is true)'
         required: true
         default: 'ubuntu-24.04'
         type: choice
@@ -32,7 +37,7 @@ on:
           - 'debian-13'
           - 'debian-12'
       arch:
-        description: 'Architecture'
+        description: 'Architecture (ignored if build_all_distros is true)'
         required: true
         default: 'amd64'
         type: choice
@@ -55,14 +60,24 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event.inputs.build_all }}" == "true" ]]; then
-            echo 'matrix={"php_version":["7.4","8.0","8.1","8.2","8.3","8.4","8.5"]}' >> $GITHUB_OUTPUT
+            VERSIONS='["7.4","8.0","8.1","8.2","8.3","8.4","8.5"]'
           else
-            echo 'matrix={"php_version":["${{ github.event.inputs.php_version }}"]}' >> $GITHUB_OUTPUT
+            VERSIONS='["${{ github.event.inputs.php_version }}"]'
           fi
+
+          if [[ "${{ github.event.inputs.build_all_distros }}" == "true" ]]; then
+            DISTROS='["ubuntu-24.04","ubuntu-22.04","debian-13","debian-12"]'
+            ARCHS='["amd64","arm64"]'
+          else
+            DISTROS='["${{ github.event.inputs.distro }}"]'
+            ARCHS='["${{ github.event.inputs.arch }}"]'
+          fi
+
+          echo "matrix={\"php_version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":${ARCHS}}" >> $GITHUB_OUTPUT
 
   build:
     needs: prepare
-    runs-on: ${{ github.event.inputs.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
     strategy:
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
       fail-fast: false
@@ -77,7 +92,7 @@ jobs:
         id: vars
         run: |
           PHP_VERSION="${{ matrix.php_version }}"
-          DISTRO="${{ github.event.inputs.distro }}"
+          DISTRO="${{ matrix.distro }}"
 
           # PHP 7.4 and 8.0 require OpenSSL 1.1 (only available on Debian 11)
           if [[ "$PHP_VERSION" == "7.4" ]] || [[ "$PHP_VERSION" == "8.0" ]]; then
@@ -106,17 +121,17 @@ jobs:
 
       - name: Build PHP ${{ matrix.php_version }}
         run: |
-          echo "Building PHP ${{ matrix.php_version }} for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }}"
+          echo "Building PHP ${{ matrix.php_version }} for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.version }} (${{ matrix.arch }})"
 
           docker run --rm \
-            --platform linux/${{ github.event.inputs.arch }} \
+            --platform linux/${{ matrix.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
             -e VERSION=${{ matrix.php_version }} \
             -e DISTRO=${{ steps.vars.outputs.base }} \
             -e DISTRO_VERSION=${{ steps.vars.outputs.version }} \
             -e DISTRO_CODENAME=${{ steps.vars.outputs.codename }} \
-            -e ARCH=${{ github.event.inputs.arch }} \
+            -e ARCH=${{ matrix.arch }} \
             -e OUTPUT_DIR=/output \
             ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.codename }} \
             bash /build/packages/php/build.sh
@@ -124,7 +139,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php${{ matrix.php_version }}-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
+          name: php${{ matrix.php_version }}-${{ matrix.distro }}-${{ matrix.arch }}
           path: output/*.deb
           retention-days: 30
 
@@ -148,9 +163,10 @@ jobs:
         run: |
           git fetch origin gh-pages:gh-pages || true
           if git show-ref --verify --quiet refs/heads/gh-pages; then
-            git checkout gh-pages -- pool/ || true
+            git worktree add repo-tmp gh-pages
             mkdir -p repo
-            cp -r pool repo/ 2>/dev/null || true
+            cp -r repo-tmp/* repo/ 2>/dev/null || true
+            git worktree remove repo-tmp --force
           fi
 
       - name: List packages
@@ -159,27 +175,18 @@ jobs:
       - name: Install APT tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev bc
+          sudo apt-get install -y dpkg-dev
 
       - name: Setup GPG
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
-          echo "GPG_KEY_ID=$(gpg --list-keys --keyid-format SHORT | grep -A1 'pub' | tail -1 | awk '{print $1}')" >> $GITHUB_ENV
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Update APT repository
         run: |
-          chmod +x ./scripts/update-repo.sh
+          export GPG_KEY_ID="${{ secrets.GPG_KEY_ID }}"
           ./scripts/update-repo.sh packages/
-
-      - name: Prepare publish directory
-        run: |
-          # Copy static files from source
-          cp -f repo/gpg.key repo/gpg.key 2>/dev/null || true
-          cp -f repo/CNAME repo/CNAME 2>/dev/null || true
-          cp -f repo/index.html repo/index.html 2>/dev/null || true
-
-          echo "Contents of repo/:"
-          find repo -type f | head -50
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
