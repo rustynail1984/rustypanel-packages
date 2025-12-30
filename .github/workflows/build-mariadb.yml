@@ -11,13 +11,13 @@ on:
         options:
           - '10.11'
           - '11.4'
-      build_all:
-        description: 'Build for ALL distros and architectures'
+      build_all_versions:
+        description: 'Build ALL versions'
         required: false
         default: false
         type: boolean
       distro:
-        description: 'Distribution (ignored if build_all is true)'
+        description: 'Distribution'
         required: true
         default: 'ubuntu-24.04'
         type: choice
@@ -26,22 +26,29 @@ on:
           - 'ubuntu-22.04'
           - 'debian-13'
           - 'debian-12'
+      build_all_distros:
+        description: 'Build ALL distros'
+        required: false
+        default: false
+        type: boolean
       arch:
-        description: 'Architecture (ignored if build_all is true)'
+        description: 'Architecture'
         required: true
         default: 'amd64'
         type: choice
         options:
           - 'amd64'
           - 'arm64'
+      build_all_archs:
+        description: 'Build ALL architectures'
+        required: false
+        default: false
+        type: boolean
       publish:
         description: 'Publish to APT repo'
         required: false
         default: false
         type: boolean
-
-env:
-  PACKAGE_NAME: rustypanel-mariadb
 
 jobs:
   prepare:
@@ -52,11 +59,25 @@ jobs:
       - name: Set build matrix
         id: set-matrix
         run: |
-          if [[ "${{ github.event.inputs.build_all }}" == "true" ]]; then
-            echo 'matrix={"distro":["ubuntu-24.04","ubuntu-22.04","debian-13","debian-12"],"arch":["amd64","arm64"]}' >> $GITHUB_OUTPUT
+          if [[ "${{ github.event.inputs.build_all_versions }}" == "true" ]]; then
+            VERSIONS='["10.11","11.4"]'
           else
-            echo 'matrix={"distro":["${{ github.event.inputs.distro }}"],"arch":["${{ github.event.inputs.arch }}"]}' >> $GITHUB_OUTPUT
+            VERSIONS='["${{ github.event.inputs.mariadb_version }}"]'
           fi
+
+          if [[ "${{ github.event.inputs.build_all_distros }}" == "true" ]]; then
+            DISTROS='["ubuntu-24.04","ubuntu-22.04","debian-13","debian-12"]'
+          else
+            DISTROS='["${{ github.event.inputs.distro }}"]'
+          fi
+
+          if [[ "${{ github.event.inputs.build_all_archs }}" == "true" ]]; then
+            ARCHS='["amd64","arm64"]'
+          else
+            ARCHS='["${{ github.event.inputs.arch }}"]'
+          fi
+
+          echo "matrix={\"version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":${ARCHS}}" >> $GITHUB_OUTPUT
 
   build:
     needs: prepare
@@ -88,22 +109,21 @@ jobs:
             case "${DISTRO#debian-}" in
               "13") echo "codename=trixie" >> $GITHUB_OUTPUT ;;
               "12") echo "codename=bookworm" >> $GITHUB_OUTPUT ;;
-              "11") echo "codename=bullseye" >> $GITHUB_OUTPUT ;;
             esac
           fi
 
       - name: Create output directory
         run: mkdir -p output
 
-      - name: Build MariaDB ${{ github.event.inputs.mariadb_version }}
+      - name: Build MariaDB ${{ matrix.version }}
         run: |
-          echo "Building MariaDB ${{ github.event.inputs.mariadb_version }} for ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} (${{ matrix.arch }})"
+          echo "Building MariaDB ${{ matrix.version }} for ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} (${{ matrix.arch }})"
 
           docker run --rm \
             --platform linux/${{ matrix.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
-            -e VERSION=${{ github.event.inputs.mariadb_version }} \
+            -e VERSION=${{ matrix.version }} \
             -e DISTRO=${{ steps.distro.outputs.base }} \
             -e DISTRO_VERSION=${{ steps.distro.outputs.version }} \
             -e DISTRO_CODENAME=${{ steps.distro.outputs.codename }} \
@@ -118,7 +138,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mariadb-${{ github.event.inputs.mariadb_version }}-${{ matrix.distro }}-${{ matrix.arch }}
+          name: mariadb-${{ matrix.version }}-${{ matrix.distro }}-${{ matrix.arch }}
           path: output/*.deb
           retention-days: 30
 

@@ -43,6 +43,16 @@ PHP_VERSION_SHORT="${PHP_MAJOR_MINOR//./}"
 PACKAGE_NAME="rustypanel-php${PHP_VERSION_SHORT}"
 PACKAGE_VERSION="${PHP_FULL_VERSION}-1~${DISTRO}${DISTRO_VERSION}"
 
+# OpenSSL 1.1.1 for legacy PHP versions (7.4, 8.0)
+OPENSSL_LEGACY_VERSION="1.1.1w"
+OPENSSL_BUILD_DIR="/tmp/openssl-build"
+NEEDS_BUNDLED_OPENSSL=false
+
+# Check if we need bundled OpenSSL (PHP 7.4 and 8.0 don't support OpenSSL 3.x)
+if [[ "$PHP_MAJOR_MINOR" == "7.4" || "$PHP_MAJOR_MINOR" == "8.0" ]]; then
+    NEEDS_BUNDLED_OPENSSL=true
+fi
+
 install_dependencies() {
     log_info "Installing build dependencies..."
 
@@ -88,6 +98,51 @@ install_dependencies() {
         libsasl2-dev \
         libtidy-dev \
         libargon2-dev
+
+    # For bundled OpenSSL build, we need perl
+    if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" ]]; then
+        apt-get install -y --no-install-recommends perl
+    fi
+}
+
+build_bundled_openssl() {
+    if [[ "$NEEDS_BUNDLED_OPENSSL" != "true" ]]; then
+        return 0
+    fi
+
+    log_info "Building bundled OpenSSL ${OPENSSL_LEGACY_VERSION} for PHP ${PHP_MAJOR_MINOR}..."
+
+    local openssl_src_dir="/tmp/openssl-src"
+    mkdir -p "$openssl_src_dir"
+    cd "$openssl_src_dir"
+
+    # Download OpenSSL 1.1.1
+    wget -q "https://www.openssl.org/source/openssl-${OPENSSL_LEGACY_VERSION}.tar.gz" -O openssl.tar.gz
+    tar -xzf openssl.tar.gz
+    cd "openssl-${OPENSSL_LEGACY_VERSION}"
+
+    # Configure for static/shared build
+    # Use linux-x86_64 or linux-aarch64 based on architecture
+    local openssl_target="linux-x86_64"
+    if [[ "$ARCH" == "arm64" ]]; then
+        openssl_target="linux-aarch64"
+    fi
+
+    ./Configure \
+        --prefix="${OPENSSL_BUILD_DIR}" \
+        --openssldir="${OPENSSL_BUILD_DIR}" \
+        -fPIC \
+        shared \
+        "$openssl_target"
+
+    make -j"$(nproc)"
+    make install_sw  # install without docs
+
+    log_success "Bundled OpenSSL ${OPENSSL_LEGACY_VERSION} built successfully"
+
+    # Set PKG_CONFIG_PATH for PHP configure
+    export PKG_CONFIG_PATH="${OPENSSL_BUILD_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+    export OPENSSL_CONF="/usr/lib/ssl/openssl.cnf"
 }
 
 download_php() {
@@ -105,6 +160,19 @@ download_php() {
 configure_php() {
     log_info "Configuring PHP..."
 
+    local openssl_opt="--with-openssl"
+    local extra_ldflags=""
+    local extra_libs=""
+
+    # Use bundled OpenSSL for PHP 7.4 and 8.0
+    if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" ]]; then
+        openssl_opt="--with-openssl=${OPENSSL_BUILD_DIR}"
+        extra_ldflags="-L${OPENSSL_BUILD_DIR}/lib -Wl,-rpath,${INSTALL_PREFIX}/lib"
+        extra_libs="-lssl -lcrypto"
+    fi
+
+    LDFLAGS="${extra_ldflags}" \
+    EXTRA_LIBS="${extra_libs}" \
     ./configure \
         --prefix="${INSTALL_PREFIX}" \
         --with-config-file-path="${INSTALL_PREFIX}/etc" \
@@ -120,7 +188,7 @@ configure_php() {
         --with-pdo-pgsql \
         --with-sqlite3 \
         --with-pdo-sqlite \
-        --with-openssl \
+        ${openssl_opt} \
         --with-zlib \
         --with-bz2 \
         --with-curl \
@@ -176,8 +244,23 @@ create_package_structure() {
     mkdir -p "${pkg_dir}${INSTALL_PREFIX}/etc/fpm.d"
     mkdir -p "${pkg_dir}/etc/systemd/system"
 
+    # Copy bundled OpenSSL libraries if needed
+    if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" ]]; then
+        log_info "Copying bundled OpenSSL libraries..."
+        mkdir -p "${pkg_dir}${INSTALL_PREFIX}/lib"
+        cp -P "${OPENSSL_BUILD_DIR}/lib/libssl.so"* "${pkg_dir}${INSTALL_PREFIX}/lib/"
+        cp -P "${OPENSSL_BUILD_DIR}/lib/libcrypto.so"* "${pkg_dir}${INSTALL_PREFIX}/lib/"
+    fi
+
     # Copy default configs
     cp php.ini-production "${pkg_dir}${INSTALL_PREFIX}/etc/php.ini"
+
+    # Configure OpenSSL CA path for bundled OpenSSL
+    if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" ]]; then
+        # Set CA path to system certificates
+        sed -i 's/;openssl.capath=/openssl.capath=\/etc\/ssl\/certs\//g' "${pkg_dir}${INSTALL_PREFIX}/etc/php.ini"
+        sed -i 's/;openssl.cafile=/openssl.cafile=\/etc\/ssl\/certs\/ca-certificates.crt/g' "${pkg_dir}${INSTALL_PREFIX}/etc/php.ini"
+    fi
 
     # PHP-FPM config
     cat > "${pkg_dir}${INSTALL_PREFIX}/etc/php-fpm.conf" << 'EOF'
@@ -257,6 +340,19 @@ create_debian_control() {
     # Calculate installed size
     local installed_size=$(du -sk "$pkg_dir" | cut -f1)
 
+    # Base dependencies (without SSL - handled separately)
+    local base_deps="libc6, libcurl4, libgd3, libicu74 | libicu72 | libicu70, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6, ca-certificates"
+
+    # For PHP 7.4/8.0 we bundle OpenSSL, so no libssl dependency needed
+    # For newer PHP versions, require system libssl
+    local ssl_dep=""
+    local bundled_note=""
+    if [[ "$NEEDS_BUNDLED_OPENSSL" != "true" ]]; then
+        ssl_dep=", libssl3 | libssl1.1"
+    else
+        bundled_note=" Includes bundled OpenSSL 1.1.1 for compatibility."
+    fi
+
     # Control file
     cat > "${debian_dir}/control" << EOF
 Package: ${PACKAGE_NAME}
@@ -265,12 +361,12 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libcurl4, libgd3, libicu74 | libicu72 | libicu70, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libssl3, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6
+Depends: ${base_deps}${ssl_dep}
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io
 Description: PHP ${PHP_MAJOR_MINOR} for RustyPanel
  Pre-compiled PHP ${PHP_FULL_VERSION} with FPM and common extensions.
- Installed to ${INSTALL_PREFIX} for RustyPanel integration.
+ Installed to ${INSTALL_PREFIX} for RustyPanel integration.${bundled_note}
  .
  Included extensions: bcmath, calendar, ctype, curl, dom, exif, fileinfo,
  filter, ftp, gd, gettext, gmp, iconv, intl, json, mbstring, mysqli,
@@ -362,9 +458,15 @@ main() {
     log_info "PHP Version:  ${PHP_FULL_VERSION} (${PHP_MAJOR_MINOR})"
     log_info "Distribution: ${DISTRO} ${DISTRO_CODENAME}"
     log_info "Architecture: ${ARCH}"
+    if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" ]]; then
+        log_info "OpenSSL:      Bundled ${OPENSSL_LEGACY_VERSION} (legacy PHP)"
+    else
+        log_info "OpenSSL:      System"
+    fi
     log_info "==================================="
 
     install_dependencies
+    build_bundled_openssl
     download_php
     configure_php
     build_php

@@ -3,13 +3,8 @@ name: Build Caddy Packages
 on:
   workflow_dispatch:
     inputs:
-      build_all_distros:
-        description: 'Build for ALL distros and architectures'
-        required: false
-        default: false
-        type: boolean
       distro:
-        description: 'Distribution (ignored if build_all_distros is true)'
+        description: 'Distribution'
         required: true
         default: 'ubuntu-24.04'
         type: choice
@@ -18,14 +13,24 @@ on:
           - 'ubuntu-22.04'
           - 'debian-13'
           - 'debian-12'
+      build_all_distros:
+        description: 'Build ALL distros'
+        required: false
+        default: false
+        type: boolean
       arch:
-        description: 'Architecture (ignored if build_all_distros is true)'
+        description: 'Architecture'
         required: true
         default: 'amd64'
         type: choice
         options:
           - 'amd64'
           - 'arm64'
+      build_all_archs:
+        description: 'Build ALL architectures'
+        required: false
+        default: false
+        type: boolean
       publish:
         description: 'Publish to APT repo'
         required: false
@@ -43,9 +48,13 @@ jobs:
         run: |
           if [[ "${{ github.event.inputs.build_all_distros }}" == "true" ]]; then
             DISTROS='["ubuntu-24.04","ubuntu-22.04","debian-13","debian-12"]'
-            ARCHS='["amd64","arm64"]'
           else
             DISTROS='["${{ github.event.inputs.distro }}"]'
+          fi
+
+          if [[ "${{ github.event.inputs.build_all_archs }}" == "true" ]]; then
+            ARCHS='["amd64","arm64"]'
+          else
             ARCHS='["${{ github.event.inputs.arch }}"]'
           fi
 
@@ -138,13 +147,8 @@ jobs:
             git worktree remove repo-tmp --force
           fi
 
-      - name: List packages
-        run: find packages -name "*.deb" -ls
-
       - name: Install APT tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
 
       - name: Setup GPG
         run: |

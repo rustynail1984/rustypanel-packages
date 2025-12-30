@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       php_version:
-        description: 'PHP Version (ignored if build_all is true)'
+        description: 'PHP Version'
         required: true
         default: '8.4'
         type: choice
@@ -16,18 +16,13 @@ on:
           - '8.3'
           - '8.4'
           - '8.5'
-      build_all:
-        description: 'Build ALL PHP versions'
-        required: false
-        default: false
-        type: boolean
-      build_all_distros:
-        description: 'Build for ALL distros and architectures'
+      build_all_versions:
+        description: 'Build ALL versions'
         required: false
         default: false
         type: boolean
       distro:
-        description: 'Distribution (ignored if build_all_distros is true)'
+        description: 'Distribution'
         required: true
         default: 'ubuntu-24.04'
         type: choice
@@ -36,14 +31,24 @@ on:
           - 'ubuntu-22.04'
           - 'debian-13'
           - 'debian-12'
+      build_all_distros:
+        description: 'Build ALL distros'
+        required: false
+        default: false
+        type: boolean
       arch:
-        description: 'Architecture (ignored if build_all_distros is true)'
+        description: 'Architecture'
         required: true
         default: 'amd64'
         type: choice
         options:
           - 'amd64'
           - 'arm64'
+      build_all_archs:
+        description: 'Build ALL architectures'
+        required: false
+        default: false
+        type: boolean
       publish:
         description: 'Publish to APT repo'
         required: false
@@ -59,7 +64,7 @@ jobs:
       - name: Set build matrix
         id: set-matrix
         run: |
-          if [[ "${{ github.event.inputs.build_all }}" == "true" ]]; then
+          if [[ "${{ github.event.inputs.build_all_versions }}" == "true" ]]; then
             VERSIONS='["7.4","8.0","8.1","8.2","8.3","8.4","8.5"]'
           else
             VERSIONS='["${{ github.event.inputs.php_version }}"]'
@@ -67,9 +72,13 @@ jobs:
 
           if [[ "${{ github.event.inputs.build_all_distros }}" == "true" ]]; then
             DISTROS='["ubuntu-24.04","ubuntu-22.04","debian-13","debian-12"]'
-            ARCHS='["amd64","arm64"]'
           else
             DISTROS='["${{ github.event.inputs.distro }}"]'
+          fi
+
+          if [[ "${{ github.event.inputs.build_all_archs }}" == "true" ]]; then
+            ARCHS='["amd64","arm64"]'
+          else
             ARCHS='["${{ github.event.inputs.arch }}"]'
           fi
 
@@ -94,13 +103,12 @@ jobs:
           PHP_VERSION="${{ matrix.php_version }}"
           DISTRO="${{ matrix.distro }}"
 
-          # PHP 7.4 and 8.0 require OpenSSL 1.1 (only available on Debian 11)
+          # PHP 7.4 and 8.0 bundle OpenSSL 1.1.1 for compatibility with OpenSSL 3.x systems
           if [[ "$PHP_VERSION" == "7.4" ]] || [[ "$PHP_VERSION" == "8.0" ]]; then
-            echo "::notice::PHP $PHP_VERSION requires OpenSSL 1.1 - using Debian 11 (Bullseye)"
-            echo "base=debian" >> $GITHUB_OUTPUT
-            echo "version=11" >> $GITHUB_OUTPUT
-            echo "codename=bullseye" >> $GITHUB_OUTPUT
-          elif [[ "$DISTRO" == ubuntu-* ]]; then
+            echo "::notice::PHP $PHP_VERSION will use bundled OpenSSL 1.1.1 for compatibility"
+          fi
+
+          if [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
             echo "version=${DISTRO#ubuntu-}" >> $GITHUB_OUTPUT
             case "${DISTRO#ubuntu-}" in
