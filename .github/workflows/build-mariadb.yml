@@ -52,7 +52,7 @@ on:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -81,7 +81,7 @@ jobs:
 
   build:
     needs: prepare
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
+    runs-on: self-hosted
     strategy:
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
       fail-fast: false
@@ -119,7 +119,7 @@ jobs:
         run: |
           echo "Building MariaDB ${{ matrix.version }} for ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} (${{ matrix.arch }})"
 
-          docker run --rm \
+          docker run --rm --privileged \
             --platform linux/${{ matrix.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
@@ -144,7 +144,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: ${{ always() && github.event.inputs.publish == 'true' }}
     concurrency:
       group: apt-repo-publish
