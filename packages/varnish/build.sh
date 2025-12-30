@@ -194,7 +194,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libpcre2-8-0 | libpcre3, libncurses6 | libncurses5, libedit2, libunwind8 | libunwind-14
+Depends: libc6, libpcre2-8-0, libncurses6 | libncurses5, libedit2, libunwind8 | libunwind-14
 Conflicts: varnish
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

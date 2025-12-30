@@ -52,7 +52,6 @@ install_dependencies() {
         curl \
         wget \
         git \
-        libpcre3-dev \
         libpcre2-dev \
         zlib1g-dev \
         libgd-dev \
@@ -419,7 +418,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libpcre3 | libpcre2-8-0, zlib1g, libgd3, libgeoip1 | libmaxminddb0, libxslt1.1
+Depends: libc6, libpcre2-8-0, zlib1g, libgd3, libgeoip1 | libmaxminddb0, libxslt1.1
 Conflicts: nginx, nginx-common, nginx-full, nginx-light
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

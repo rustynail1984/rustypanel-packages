@@ -4,62 +4,46 @@ on:
   workflow_dispatch:
     inputs:
       mariadb_version:
-        description: 'MariaDB Version (e.g., 11.4, 10.11, all)'
+        description: 'MariaDB Version'
         required: true
-        default: 'all'
+        default: '11.4'
+        type: choice
+        options:
+          - '10.11'
+          - '11.4'
       distro:
-        description: 'Distribution (ubuntu-24.04, ubuntu-22.04, debian-12, all)'
+        description: 'Distribution'
         required: true
-        default: 'all'
-  push:
-    tags:
-      - 'mariadb-*'
+        default: 'ubuntu-24.04'
+        type: choice
+        options:
+          - 'ubuntu-24.04'
+          - 'ubuntu-22.04'
+          - 'debian-13'
+          - 'debian-12'
+      arch:
+        description: 'Architecture'
+        required: true
+        default: 'amd64'
+        type: choice
+        options:
+          - 'amd64'
+          - 'arm64'
+      publish:
+        description: 'Publish to APT repo'
+        required: false
+        default: false
+        type: boolean
 
 env:
   PACKAGE_NAME: rustypanel-mariadb
 
 jobs:
-  build-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set build matrix
-        id: set-matrix
-        run: |
-          if [ "${{ github.event.inputs.mariadb_version }}" = "all" ] || [ -z "${{ github.event.inputs.mariadb_version }}" ]; then
-            VERSIONS='["10.11", "11.4"]'
-          else
-            VERSIONS='["${{ github.event.inputs.mariadb_version }}"]'
-          fi
-
-          if [ "${{ github.event.inputs.distro }}" = "all" ] || [ -z "${{ github.event.inputs.distro }}" ]; then
-            DISTROS='["ubuntu-24.04", "ubuntu-22.04", "debian-13", "debian-12"]'
-          else
-            DISTROS='["${{ github.event.inputs.distro }}"]'
-          fi
-
-          ARCHS='["amd64", "arm64"]'
-
-          echo "matrix={\"mariadb_version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":${ARCHS}}" >> $GITHUB_OUTPUT
-
   build:
-    needs: build-matrix
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
+    runs-on: ${{ github.event.inputs.arch == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        if: matrix.arch == 'arm64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -67,7 +51,7 @@ jobs:
       - name: Parse distro info
         id: distro
         run: |
-          DISTRO="${{ matrix.distro }}"
+          DISTRO="${{ github.event.inputs.distro }}"
           if [[ "$DISTRO" == ubuntu-* ]]; then
             echo "base=ubuntu" >> $GITHUB_OUTPUT
             echo "version=${DISTRO#ubuntu-}" >> $GITHUB_OUTPUT
@@ -85,30 +69,40 @@ jobs:
             esac
           fi
 
-      - name: Build MariaDB package
+      - name: Create output directory
+        run: mkdir -p output
+
+      - name: Build MariaDB ${{ github.event.inputs.mariadb_version }}
         run: |
+          echo "Building MariaDB ${{ github.event.inputs.mariadb_version }} for ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }}"
+
           docker run --rm \
-            --platform linux/${{ matrix.arch }} \
+            --platform linux/${{ github.event.inputs.arch }} \
             -v ${{ github.workspace }}:/build \
-            -e MARIADB_VERSION=${{ matrix.mariadb_version }} \
+            -v ${{ github.workspace }}/output:/output \
+            -e VERSION=${{ github.event.inputs.mariadb_version }} \
             -e DISTRO=${{ steps.distro.outputs.base }} \
             -e DISTRO_VERSION=${{ steps.distro.outputs.version }} \
             -e DISTRO_CODENAME=${{ steps.distro.outputs.codename }} \
-            -e ARCH=${{ matrix.arch }} \
-            ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.version }} \
-            /build/packages/mariadb/build.sh
+            -e ARCH=${{ github.event.inputs.arch }} \
+            -e OUTPUT_DIR=/output \
+            ${{ steps.distro.outputs.base }}:${{ steps.distro.outputs.codename }} \
+            bash /build/packages/mariadb/build.sh
+
+      - name: List built packages
+        run: ls -la output/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mariadb${{ matrix.mariadb_version }}-${{ matrix.distro }}-${{ matrix.arch }}
+          name: mariadb-${{ github.event.inputs.mariadb_version }}-${{ github.event.inputs.distro }}-${{ github.event.inputs.arch }}
           path: output/*.deb
-          retention-days: 7
+          retention-days: 30
 
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: ${{ always() && github.event.inputs.publish == 'true' }}
     concurrency:
       group: apt-repo-publish
       cancel-in-progress: false
@@ -116,7 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: packages
@@ -125,17 +119,24 @@ jobs:
         run: |
           git fetch origin gh-pages:gh-pages || true
           if git show-ref --verify --quiet refs/heads/gh-pages; then
-            git checkout gh-pages -- pool/ || true
+            git worktree add repo-tmp gh-pages
             mkdir -p repo
-            cp -r pool repo/ 2>/dev/null || true
+            cp -r repo-tmp/* repo/ 2>/dev/null || true
+            git worktree remove repo-tmp --force
           fi
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
 
       - name: Setup GPG
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Update APT repository
         run: |
+          export GPG_KEY_ID="${{ secrets.GPG_KEY_ID }}"
           ./scripts/update-repo.sh packages/
 
       - name: Deploy to GitHub Pages

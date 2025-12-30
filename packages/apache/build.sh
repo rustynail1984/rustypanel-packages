@@ -49,7 +49,7 @@ install_dependencies() {
         ca-certificates \
         curl \
         wget \
-        libpcre3-dev \
+        libpcre2-dev \
         libssl-dev \
         libxml2-dev \
         libexpat1-dev \
@@ -205,7 +205,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: libc6, libpcre3 | libpcre2-8-0, libssl3 | libssl1.1, libxml2, libnghttp2-14, libbrotli1, zlib1g
+Depends: libc6, libpcre2-8-0, libssl3 | libssl1.1, libxml2, libnghttp2-14, libbrotli1, zlib1g
 Conflicts: apache2, apache2-bin
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io

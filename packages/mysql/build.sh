@@ -110,10 +110,18 @@ configure_mysql() {
         -DWITH_SYSTEMD=OFF
     )
 
-    # MySQL 5.7 specific options
+    # MySQL 5.7 specific options (EOL - needs compatibility fixes)
     if [[ "$MYSQL_BRANCH" == "5.7" ]]; then
+        # MySQL 5.7 needs relaxed compiler flags for modern GCC and bundled SSL
+        local compat_cflags="-O2 -Wno-error -Wno-deprecated-declarations"
+        local compat_cxxflags="-O2 -Wno-error -Wno-deprecated-declarations -Wno-error=deprecated-copy -Wno-error=redundant-move -std=c++14"
         cmake_opts+=(
             -DWITH_EMBEDDED_SERVER=OFF
+            -DWITH_SSL=bundled
+            -DWITH_ZSTD=bundled
+            -DFORCE_INSOURCE_BUILD=1
+            -DCMAKE_C_FLAGS="${compat_cflags}"
+            -DCMAKE_CXX_FLAGS="${compat_cxxflags}"
         )
     fi
 
