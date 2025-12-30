@@ -101,7 +101,7 @@ jobs:
         run: |
           echo "Building Caddy for ${{ steps.vars.outputs.base }}:${{ steps.vars.outputs.codename }} (${{ matrix.arch }})"
 
-          docker run --rm \
+          docker run --rm --privileged \
             --platform linux/${{ matrix.arch }} \
             -v ${{ github.workspace }}:/build \
             -v ${{ github.workspace }}/output:/output \
