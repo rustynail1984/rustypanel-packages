@@ -125,7 +125,14 @@ configure_mariadb() {
 build_mariadb() {
     log_info "Building MariaDB (this may take a while)..."
 
-    make -j"$(nproc)"
+    # Limit parallelism - MariaDB needs ~2-4GB RAM per compile thread
+    # Use half of available cores, max 8 to prevent OOM
+    local jobs=$(( $(nproc) / 2 ))
+    [[ $jobs -gt 8 ]] && jobs=8
+    [[ $jobs -lt 1 ]] && jobs=1
+
+    log_info "Using $jobs parallel jobs ($(nproc) cores available)"
+    make -j"$jobs"
 }
 
 create_package_structure() {
