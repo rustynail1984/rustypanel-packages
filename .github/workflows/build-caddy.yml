@@ -155,9 +155,10 @@ jobs:
             --no-progress || true
 
       - name: Setup GPG
-        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+          if [[ -n "$GPG_PRIVATE_KEY" ]]; then
+            echo "$GPG_PRIVATE_KEY" | gpg --import
+          fi
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
