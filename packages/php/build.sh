@@ -163,12 +163,19 @@ configure_php() {
     local openssl_opt="--with-openssl"
     local extra_ldflags=""
     local extra_libs=""
+    local intl_opt="--enable-intl"
 
     # Use bundled OpenSSL for PHP 7.4 and 8.0
     if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" ]]; then
         openssl_opt="--with-openssl=${OPENSSL_BUILD_DIR}"
         extra_ldflags="-L${OPENSSL_BUILD_DIR}/lib -Wl,-rpath,${INSTALL_PREFIX}/lib"
         extra_libs="-lssl -lcrypto"
+    fi
+
+    # Disable intl for PHP 7.4/8.0 on Debian 13+ (ICU 75+ incompatible)
+    if [[ "$NEEDS_BUNDLED_OPENSSL" == "true" && "$DISTRO_CODENAME" == "trixie" ]]; then
+        log_info "Disabling intl extension (ICU 75 incompatible with PHP ${PHP_MAJOR_MINOR})"
+        intl_opt=""
     fi
 
     LDFLAGS="${extra_ldflags}" \
@@ -200,7 +207,7 @@ configure_php() {
         --with-gettext \
         --with-gmp \
         --with-iconv \
-        --enable-intl \
+        ${intl_opt} \
         --enable-mbstring \
         --with-readline \
         --with-sodium \
@@ -340,17 +347,25 @@ create_debian_control() {
     # Calculate installed size
     local installed_size=$(du -sk "$pkg_dir" | cut -f1)
 
-    # Base dependencies (without SSL - handled separately)
-    local base_deps="libc6, libcurl4, libgd3, libicu74 | libicu72 | libicu70, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6, ca-certificates"
+    # Base dependencies (without SSL and ICU - handled separately)
+    local base_deps="libc6, libcurl4, libgd3, libjpeg62-turbo | libjpeg-turbo8, libonig5, libpng16-16, libpq5, libreadline8, libsodium23, libsqlite3-0, libwebp7 | libwebp6, libxml2, libxslt1.1, libzip4, zlib1g, libargon2-1, libfreetype6, ca-certificates"
 
     # For PHP 7.4/8.0 we bundle OpenSSL, so no libssl dependency needed
     # For newer PHP versions, require system libssl
     local ssl_dep=""
+    local icu_dep=", libicu74 | libicu72 | libicu70"
     local bundled_note=""
+    local intl_ext="intl, "
     if [[ "$NEEDS_BUNDLED_OPENSSL" != "true" ]]; then
         ssl_dep=", libssl3 | libssl1.1"
     else
         bundled_note=" Includes bundled OpenSSL 1.1.1 for compatibility."
+        # intl disabled on Debian 13 for legacy PHP
+        if [[ "$DISTRO_CODENAME" == "trixie" ]]; then
+            bundled_note="${bundled_note} Note: intl extension disabled (ICU 75 incompatible)."
+            intl_ext=""
+            icu_dep=""
+        fi
     fi
 
     # Control file
@@ -361,7 +376,7 @@ Section: web
 Priority: optional
 Architecture: ${ARCH}
 Installed-Size: ${installed_size}
-Depends: ${base_deps}${ssl_dep}
+Depends: ${base_deps}${icu_dep}${ssl_dep}
 Maintainer: RustyPanel <packages@rustypanel.monity.io>
 Homepage: https://rustypanel.monity.io
 Description: PHP ${PHP_MAJOR_MINOR} for RustyPanel
@@ -369,7 +384,7 @@ Description: PHP ${PHP_MAJOR_MINOR} for RustyPanel
  Installed to ${INSTALL_PREFIX} for RustyPanel integration.${bundled_note}
  .
  Included extensions: bcmath, calendar, ctype, curl, dom, exif, fileinfo,
- filter, ftp, gd, gettext, gmp, iconv, intl, json, mbstring, mysqli,
+ filter, ftp, gd, gettext, gmp, iconv, ${intl_ext}json, mbstring, mysqli,
  mysqlnd, opcache, openssl, pcntl, pdo, pdo_mysql, pdo_pgsql, pdo_sqlite,
  pgsql, phar, posix, readline, session, shmop, simplexml, soap, sockets,
  sodium, sqlite3, sysvmsg, sysvsem, sysvshm, tokenizer, xml, xmlreader,
