@@ -147,7 +147,11 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev awscli
+          sudo apt-get install -y dpkg-dev curl unzip
+          curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          sudo /tmp/aws/install --update
+          rm -rf /tmp/aws /tmp/awscliv2.zip
 
       - name: Fetch existing repository from R2
         env:
