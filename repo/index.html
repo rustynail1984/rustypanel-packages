@@ -249,7 +249,7 @@
     <h3>2. Import GPG Key</h3>
     <div class="cmd">
         <span class="comment"># Download and install the repository signing key</span><br>
-        curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel.gpg
+        curl -fsSL https://rp.mirror.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel.gpg
     </div>
 
     <h3>3. Add Repository</h3>
@@ -264,22 +264,22 @@
 
     <div id="distro-noble" class="distro-content active">
         <div class="cmd">
-            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>noble</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://rp.mirror.monity.io <strong>noble</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
         </div>
     </div>
     <div id="distro-jammy" class="distro-content">
         <div class="cmd">
-            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>jammy</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://rp.mirror.monity.io <strong>jammy</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
         </div>
     </div>
     <div id="distro-trixie" class="distro-content">
         <div class="cmd">
-            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>trixie</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://rp.mirror.monity.io <strong>trixie</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
         </div>
     </div>
     <div id="distro-bookworm" class="distro-content">
         <div class="cmd">
-            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io <strong>bookworm</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+            echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://rp.mirror.monity.io <strong>bookworm</strong> main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
         </div>
     </div>
 
