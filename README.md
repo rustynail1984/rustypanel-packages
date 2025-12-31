@@ -2,7 +2,7 @@
 
 Pre-compiled Debian/Ubuntu packages for the RustyPanel App Store.
 
-**Repository:** [https://mirror-rustypanel.monity.io/](https://mirror-rustypanel.monity.io/)
+**Repository:** [https://rp.mirror.monity.io/](https://rp.mirror.monity.io/)
 
 ## Overview
 
@@ -66,10 +66,10 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 sudo apt update && sudo apt install -y curl gnupg
 
 # Import GPG key
-curl -fsSL https://mirror-rustypanel.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel.gpg
+curl -fsSL https://rp.mirror.monity.io/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/rustypanel.gpg
 
 # Add repository (replace 'noble' with your distro codename: noble, jammy, trixie, bookworm)
-echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://mirror-rustypanel.monity.io $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
+echo "deb [signed-by=/usr/share/keyrings/rustypanel.gpg] https://rp.mirror.monity.io $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/rustypanel.list
 
 # Update package list
 sudo apt update
@@ -200,7 +200,7 @@ MIT License - see [LICENSE](LICENSE)
 
 ## Links
 
-- [Package Repository / Mirror](https://mirror-rustypanel.monity.io/)
+- [Package Repository / Mirror](https://rp.mirror.monity.io/)
 - [RustyPanel Main Project](https://github.com/rustynail1984/rustypanel)
 - [Documentation](https://rustypanel.monity.io/docs)
 - [Issue Tracker](https://github.com/rustypanel/packages/issues)

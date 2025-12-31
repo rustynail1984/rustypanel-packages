@@ -144,20 +144,25 @@ jobs:
         with:
           path: packages
 
-      - name: Fetch existing repository
+      - name: Install tools
         run: |
-          git fetch origin gh-pages:gh-pages || true
-          if git show-ref --verify --quiet refs/heads/gh-pages; then
-            git worktree add repo-tmp gh-pages
-            mkdir -p repo
-            cp -r repo-tmp/* repo/ 2>/dev/null || true
-            git worktree remove repo-tmp --force
-          fi
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev awscli
 
-      - name: Install APT tools
-        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+      - name: Fetch existing repository from R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          mkdir -p repo
+          aws s3 sync "s3://${R2_BUCKET_NAME}/" repo/ \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --no-progress || true
 
       - name: Setup GPG
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
         env:
@@ -168,10 +173,10 @@ jobs:
           export GPG_KEY_ID="${{ secrets.GPG_KEY_ID }}"
           ./scripts/update-repo.sh packages/
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./repo
-          keep_files: true
-          cname: mirror-rustypanel.monity.io
+      - name: Upload to Cloudflare R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: ./scripts/upload-to-r2.sh
