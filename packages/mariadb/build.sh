@@ -126,9 +126,9 @@ build_mariadb() {
     log_info "Building MariaDB (this may take a while)..."
 
     # Limit parallelism - MariaDB needs ~2-4GB RAM per compile thread
-    # Use half of available cores, max 8 to prevent OOM
+    # Use half of available cores, max 16 to prevent OOM
     local jobs=$(( $(nproc) / 2 ))
-    [[ $jobs -gt 8 ]] && jobs=8
+    [[ $jobs -gt 16 ]] && jobs=16
     [[ $jobs -lt 1 ]] && jobs=1
 
     log_info "Using $jobs parallel jobs ($(nproc) cores available)"
