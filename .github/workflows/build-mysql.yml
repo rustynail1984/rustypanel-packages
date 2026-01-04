@@ -9,7 +9,6 @@ on:
         default: '8.4'
         type: choice
         options:
-          - '5.7'
           - '8.0'
           - '8.4'
       build_all_versions:
@@ -32,19 +31,6 @@ on:
         required: false
         default: false
         type: boolean
-      arch:
-        description: 'Architecture'
-        required: true
-        default: 'amd64'
-        type: choice
-        options:
-          - 'amd64'
-          - 'arm64'
-      build_all_archs:
-        description: 'Build ALL architectures'
-        required: false
-        default: false
-        type: boolean
       publish:
         description: 'Publish to APT repo'
         required: false
@@ -61,7 +47,7 @@ jobs:
         id: set-matrix
         run: |
           if [[ "${{ github.event.inputs.build_all_versions }}" == "true" ]]; then
-            VERSIONS='["5.7","8.0","8.4"]'
+            VERSIONS='["8.0","8.4"]'
           else
             VERSIONS='["${{ github.event.inputs.mysql_version }}"]'
           fi
@@ -72,13 +58,7 @@ jobs:
             DISTROS='["${{ github.event.inputs.distro }}"]'
           fi
 
-          if [[ "${{ github.event.inputs.build_all_archs }}" == "true" ]]; then
-            ARCHS='["amd64","arm64"]'
-          else
-            ARCHS='["${{ github.event.inputs.arch }}"]'
-          fi
-
-          echo "matrix={\"version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":${ARCHS}}" >> $GITHUB_OUTPUT
+          echo "matrix={\"version\":${VERSIONS},\"distro\":${DISTROS},\"arch\":[\"amd64\"]}" >> $GITHUB_OUTPUT
 
   build:
     needs: prepare

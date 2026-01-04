@@ -26,7 +26,6 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 declare -A MYSQL_VERSIONS=(
     ["8.4"]="8.4.4"
     ["8.0"]="8.0.41"
-    ["5.7"]="5.7.44"
 )
 
 MYSQL_VERSION="${MYSQL_VERSIONS[$MYSQL_BRANCH]:-}"
@@ -92,13 +91,23 @@ configure_mysql() {
     mkdir -p build
     cd build
 
+    # Check system ZLIB version (MySQL 8.x needs >= 1.2.13)
+    local zlib_opt="system"
+    if [[ "$MYSQL_BRANCH" == "8.0" || "$MYSQL_BRANCH" == "8.4" ]]; then
+        local zlib_ver=$(dpkg-query -W -f='${Version}' zlib1g-dev 2>/dev/null | cut -d: -f2 | cut -d- -f1)
+        if [[ "$(printf '%s\n' "1.2.13" "$zlib_ver" | sort -V | head -n1)" != "1.2.13" ]]; then
+            log_info "System ZLIB ${zlib_ver} too old, using bundled ZLIB"
+            zlib_opt="bundled"
+        fi
+    fi
+
     local cmake_opts=(
         -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}"
         -DMYSQL_DATADIR="${DATA_DIR}"
         -DSYSCONFDIR="${INSTALL_PREFIX}/etc"
         -DMYSQL_UNIX_ADDR="/run/rustypanel/mysql-${MYSQL_BRANCH}.sock"
         -DWITH_SSL=system
-        -DWITH_ZLIB=system
+        -DWITH_ZLIB=${zlib_opt}
         -DWITH_LZ4=system
         -DWITH_ZSTD=system
         -DWITH_INNODB_MEMCACHED=ON
@@ -109,21 +118,6 @@ configure_mysql() {
         -DDEFAULT_COLLATION=utf8mb4_general_ci
         -DWITH_SYSTEMD=OFF
     )
-
-    # MySQL 5.7 specific options (EOL - needs compatibility fixes)
-    if [[ "$MYSQL_BRANCH" == "5.7" ]]; then
-        # MySQL 5.7 needs relaxed compiler flags for modern GCC and bundled SSL
-        local compat_cflags="-O2 -Wno-error -Wno-deprecated-declarations"
-        local compat_cxxflags="-O2 -Wno-error -Wno-deprecated-declarations -Wno-error=deprecated-copy -Wno-error=redundant-move -std=c++14"
-        cmake_opts+=(
-            -DWITH_EMBEDDED_SERVER=OFF
-            -DWITH_SSL=bundled
-            -DWITH_ZSTD=bundled
-            -DFORCE_INSOURCE_BUILD=1
-            -DCMAKE_C_FLAGS="${compat_cflags}"
-            -DCMAKE_CXX_FLAGS="${compat_cxxflags}"
-        )
-    fi
 
     cmake .. "${cmake_opts[@]}"
 }

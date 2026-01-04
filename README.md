@@ -29,7 +29,7 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 
 | Package | Versions | Architectures |
 |---------|----------|---------------|
-| `rustypanel-php` | 7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5 | amd64, arm64 |
+| `rustypanel-php` | 7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5 | amd64 |
 
 > **Note:** Node.js is managed via nvm (Node Version Manager), not as a system package.
 
@@ -37,25 +37,25 @@ This repository provides optimized, pre-compiled packages available as "Quick In
 
 | Package | Versions | Architectures |
 |---------|----------|---------------|
-| `rustypanel-mariadb` | 10.11, 11.4 | amd64, arm64 |
-| `rustypanel-mysql` | 5.7, 8.0, 8.4 | amd64, arm64 |
-| `rustypanel-redis` | 7.2, 7.4, 8.0 | amd64, arm64 |
-| `rustypanel-postgresql` | 15, 16, 17 | amd64, arm64 |
+| `rustypanel-mariadb` | 10.11, 11.4 | amd64 |
+| `rustypanel-mysql` | 8.0, 8.4 | amd64 |
+| `rustypanel-redis` | 7.2, 7.4, 8.0 | amd64 |
+| `rustypanel-postgresql` | 15, 16, 17 | amd64 |
 
 ### Web Servers
 
 | Package | Versions | Architectures |
 |---------|----------|---------------|
-| `rustypanel-nginx` | mainline, stable | amd64, arm64 |
-| `rustypanel-apache` | 2.4 | amd64, arm64 |
-| `rustypanel-caddy` | latest | amd64, arm64 |
+| `rustypanel-nginx` | mainline, stable | amd64 |
+| `rustypanel-apache` | 2.4 | amd64 |
+| `rustypanel-caddy` | latest | amd64 |
 
 ### Caching & Load Balancing
 
 | Package | Versions | Architectures |
 |---------|----------|---------------|
-| `rustypanel-varnish` | 7.5, 7.6 | amd64, arm64 |
-| `rustypanel-haproxy` | 2.9, 3.0 | amd64, arm64 |
+| `rustypanel-varnish` | 7.5, 7.6 | amd64 |
+| `rustypanel-haproxy` | 2.9, 3.0 | amd64 |
 
 ## Installation
 
@@ -134,8 +134,8 @@ Packages are automatically built via GitHub Actions:
 # Build PHP 8.3 for Ubuntu 24.04 amd64
 ./scripts/build-package.sh php 8.3 ubuntu-24.04 amd64
 
-# Build PHP 8.3 for Debian 13 arm64
-./scripts/build-package.sh php 8.3 debian-13 arm64
+# Build PHP 8.3 for Debian 13
+./scripts/build-package.sh php 8.3 debian-13 amd64
 
 # Build all PHP versions
 ./scripts/build-all.sh php
@@ -149,7 +149,7 @@ rustypanel-{app}{major}{minor}_{version}-{build}~{distro}{distro_version}_{arch}
 Examples:
 rustypanel-php83_8.3.15-1~ubuntu24.04_amd64.deb
 rustypanel-php83_8.3.15-1~debian12_amd64.deb
-rustypanel-mariadb114_11.4.3-1~ubuntu22.04_arm64.deb
+rustypanel-mariadb114_11.4.3-1~ubuntu22.04_amd64.deb
 rustypanel-nginx_1.27.3-1~debian13_amd64.deb
 ```
 
